@@ -54,6 +54,8 @@ public class Pingpong {
             throw new PingpongException("The description of an event cannot be empty.");
         } else if (input.startsWith("event ")) {
             handleEvent(input);
+        } else if (input.equals("delete") || input.equals("delete ") || input.startsWith("delete ")) {
+            handleDelete(input);
         } else {
             throw new PingpongException("I'm sorry, but I don't know what that means :-(");
         }
@@ -122,7 +124,7 @@ public class Pingpong {
             throw new PingpongException("The description of a todo cannot be empty.");
         }
 
-        Task newTask = new ToDo(description);
+        Task newTask = new Todo(description);
         tasks.add(newTask);
         System.out.println(" Got it. I've added this task:");
         System.out.println("   " + newTask);
@@ -183,5 +185,31 @@ public class Pingpong {
         System.out.println(" Got it. I've added this task:");
         System.out.println("   " + newTask);
         System.out.println(" Now you have " + tasks.size() + " tasks in the list.");
+    }
+
+    private static void handleDelete(String input) throws PingpongException {
+        String numberStr = "";
+        if (input.length() > 6) {
+            numberStr = input.substring(6).trim();
+        }
+
+        if (numberStr.isEmpty()) {
+            throw new PingpongException("Please specify which task to delete.");
+        }
+
+        try {
+            int taskNum = Integer.parseInt(numberStr) - 1;
+            if (taskNum < 0 || taskNum >= tasks.size()) {
+                throw new PingpongException("Task number " + (taskNum + 1) + " does not exist.");
+            }
+
+            Task task = tasks.get(taskNum);
+            tasks.remove(taskNum);
+            System.out.println(" Noted. I've removed this task:");
+            System.out.println("   " + task);
+            System.out.println(" Now you have " + tasks.size() + " tasks in the list.");
+        } catch (NumberFormatException e) {
+            throw new PingpongException("Please provide a valid task number.");
+        }
     }
 }
