@@ -14,7 +14,16 @@ public class Pingpong {
         String input;
         while (!(input = scanner.nextLine()).equals("bye")) {
             System.out.println("____________________________________________________________");
-            System.out.println(" " + input);
+
+            if (input.equals("list")) {
+                for (int i = 0; i < tasks.size(); i++) {
+                    System.out.println(" " + (i + 1) + ". " + tasks.get(i));
+                }
+            } else {
+                tasks.add(input);
+                System.out.println(" added: " + input);
+            }
+
             System.out.println("____________________________________________________________");
         }
 
