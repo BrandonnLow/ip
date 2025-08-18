@@ -12,6 +12,10 @@ mark 3
 mark 4
 list
 unmark 3
+delete 3
+list
+delete 1
+list
 todo
 blah
 deadline
@@ -22,4 +26,7 @@ event incomplete /from start /to
 mark
 mark abc
 mark 99
+delete
+delete abc
+delete 99
 bye
