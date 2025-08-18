@@ -12,4 +12,14 @@ mark 3
 mark 4
 list
 unmark 3
+todo
+blah
+deadline
+event
+deadline incomplete
+event incomplete /from
+event incomplete /from start /to
+mark
+mark abc
+mark 99
 bye
