@@ -1,13 +1,17 @@
 public class Task {
-    protected String description;
-    protected boolean isDone;
+    private String description;
+    private boolean isDone;
+    private TaskType type;
 
-    public Task(String description) {
+
+    public Task(String description, TaskType type) {
         this.description = description;
         this.isDone = false;
+        this.type = type;
     }
 
-    private String getStatusIcon() {
+
+    private String getStatus() {
         return (isDone ? "X" : " ");
     }
 
@@ -23,8 +27,13 @@ public class Task {
         return description;
     }
 
+    public TaskType getType() {
+        return this.type;
+    }
+
+
     @Override
     public String toString() {
-        return "[" + getStatusIcon() + "] " + getDescription();
+        return  "[" + type.getSymbol() + "][" + getStatus() + "] " + getDescription();
     }
 }
