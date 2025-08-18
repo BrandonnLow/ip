@@ -5,6 +5,7 @@ public class Pingpong {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
         ArrayList<String> tasks = new ArrayList<>();
+        ArrayList<Boolean> taskStatus = new ArrayList<>();
 
         System.out.println("____________________________________________________________");
         System.out.println(" Hello! I'm Pingpong");
@@ -16,11 +17,36 @@ public class Pingpong {
             System.out.println("____________________________________________________________");
 
             if (input.equals("list")) {
+                System.out.println(" Here are the tasks in your list:");
                 for (int i = 0; i < tasks.size(); i++) {
-                    System.out.println(" " + (i + 1) + ". " + tasks.get(i));
+                    String status = taskStatus.get(i) ? "[X]" : "[ ]";
+                    System.out.println(" " + (i + 1) + "." + status + " " + tasks.get(i));
+                }
+            } else if (input.startsWith("mark ")) {
+                try {
+                    int taskNum = Integer.parseInt(input.substring(5)) - 1;
+                    if (taskNum >= 0 && taskNum < tasks.size()) {
+                        taskStatus.set(taskNum, true);
+                        System.out.println(" Nice! I've marked this task as done:");
+                        System.out.println("   [X] " + tasks.get(taskNum));
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println(" Please provide a valid task number!");
+                }
+            } else if (input.startsWith("unmark ")) {
+                try {
+                    int taskNum = Integer.parseInt(input.substring(7)) - 1;
+                    if (taskNum >= 0 && taskNum < tasks.size()) {
+                        taskStatus.set(taskNum, false);
+                        System.out.println(" OK, I've marked this task as not done yet:");
+                        System.out.println("   [ ] " + tasks.get(taskNum));
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println(" Please provide a valid task number!");
                 }
             } else {
                 tasks.add(input);
+                taskStatus.add(false);
                 System.out.println(" added: " + input);
             }
 
@@ -28,7 +54,7 @@ public class Pingpong {
         }
 
         System.out.println("____________________________________________________________");
-        System.out.println(" Bye, hope to see you again soon!");
+        System.out.println(" Bye. Hope to see you again soon!");
         System.out.println("____________________________________________________________");
 
         scanner.close();
