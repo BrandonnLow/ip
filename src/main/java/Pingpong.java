@@ -25,8 +25,8 @@ public class Pingpong {
                 Task newTask = new ToDo(description);
                 tasks.add(newTask);
 
-                System.out.println(" Got it. I've added this task: ");
-                System.out.println("  " + newTask);
+                System.out.println(" Got it. I've added this task:");
+                System.out.println("   " + newTask);
                 System.out.println(" Now you have " + tasks.size() + " tasks in the list.");
 
             } else if (input.startsWith("deadline ")) {
@@ -37,8 +37,8 @@ public class Pingpong {
                 Task newTask = new Deadline(description, by);
                 tasks.add(newTask);
 
-                System.out.println(" Got it. I've added this task: ");
-                System.out.println("  " + newTask);
+                System.out.println(" Got it. I've added this task:");
+                System.out.println("   " + newTask);
                 System.out.println(" Now you have " + tasks.size() + " tasks in the list.");
 
 
@@ -57,8 +57,8 @@ public class Pingpong {
                 Task newTask = new Event(description, start, end);
                 tasks.add(newTask);
 
-                System.out.println(" Got it. I've added this task: ");
-                System.out.println("  " + newTask);
+                System.out.println(" Got it. I've added this task:");
+                System.out.println("   " + newTask);
                 System.out.println(" Now you have " + tasks.size() + " tasks in the list.");
 
             } else if (input.startsWith("mark ")) {
