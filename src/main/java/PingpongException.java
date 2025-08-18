@@ -1,4 +1,5 @@
-package PACKAGE_NAME;
-
-public class PingpongException {
+public class PingpongException extends Exception {
+    public PingpongException(String message) {
+        super(message);
+    }
 }
