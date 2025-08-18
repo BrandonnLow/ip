@@ -7,7 +7,7 @@ public class Task {
         this.isDone = false;
     }
 
-    private String getStatus() {
+    private String getStatusIcon() {
         return (isDone ? "X" : " ");
     }
 
@@ -25,6 +25,6 @@ public class Task {
 
     @Override
     public String toString() {
-        return "[" + getStatus() + "] " + getDescription();
+        return "[" + getStatusIcon() + "] " + getDescription();
     }
 }
