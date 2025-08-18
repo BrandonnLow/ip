@@ -20,6 +20,47 @@ public class Pingpong {
                 for (int i = 0; i < tasks.size(); i++) {
                     System.out.println(" " + (i + 1) + "." + tasks.get(i));
                 }
+            } else if (input.startsWith("todo ")) {
+                String description = input.substring(5);
+                Task newTask = new ToDo(description);
+                tasks.add(newTask);
+
+                System.out.println(" Got it. I've added this task: ");
+                System.out.println("  " + newTask);
+                System.out.println(" Now you have " + tasks.size() + " tasks in the list.");
+
+            } else if (input.startsWith("deadline ")) {
+                String[] parts = input.substring(9).split(" /by ");
+
+                String description = parts[0];
+                String by = parts[1];
+                Task newTask = new Deadline(description, by);
+                tasks.add(newTask);
+
+                System.out.println(" Got it. I've added this task: ");
+                System.out.println("  " + newTask);
+                System.out.println(" Now you have " + tasks.size() + " tasks in the list.");
+
+
+            } else if (input.startsWith("event ")) {
+
+                String part1 = input.substring(6);
+
+                String[] part2 = part1.split(" /from ");
+
+                String[] part3 = part2[1].split(" /to ");
+
+                String description = part2[0];
+                String start = part3[0];
+                String end = part3[1];
+
+                Task newTask = new Event(description, start, end);
+                tasks.add(newTask);
+
+                System.out.println(" Got it. I've added this task: ");
+                System.out.println("  " + newTask);
+                System.out.println(" Now you have " + tasks.size() + " tasks in the list.");
+
             } else if (input.startsWith("mark ")) {
                 try {
                     int taskNum = Integer.parseInt(input.substring(5)) - 1;
