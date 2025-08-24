@@ -9,129 +9,112 @@ ____________________________________________________________
 ____________________________________________________________
 ____________________________________________________________
  Got it. I've added this task:
-   [T][ ] return book
+   [D][ ] submit report (by: Dec 2 2019)
  Now you have 2 tasks in the list.
+____________________________________________________________
+____________________________________________________________
+ Got it. I've added this task:
+   [E][ ] team meeting (from: Dec 15 2019, 2:00pm to: Dec 15 2019, 4:00pm)
+ Now you have 3 tasks in the list.
 ____________________________________________________________
 ____________________________________________________________
  Here are the tasks in your list:
  1.[T][ ] read book
- 2.[T][ ] return book
+ 2.[D][ ] submit report (by: Dec 2 2019)
+ 3.[E][ ] team meeting (from: Dec 15 2019, 2:00pm to: Dec 15 2019, 4:00pm)
 ____________________________________________________________
 ____________________________________________________________
  Nice! I've marked this task as done:
-  [T][X] read book
+  [D][X] submit report (by: Dec 2 2019)
 ____________________________________________________________
 ____________________________________________________________
  Here are the tasks in your list:
- 1.[T][X] read book
- 2.[T][ ] return book
+ 1.[T][ ] read book
+ 2.[D][X] submit report (by: Dec 2 2019)
+ 3.[E][ ] team meeting (from: Dec 15 2019, 2:00pm to: Dec 15 2019, 4:00pm)
 ____________________________________________________________
 ____________________________________________________________
  Got it. I've added this task:
-   [D][ ] submit report (by: Sunday)
- Now you have 3 tasks in the list.
+   [D][ ] return book (by: Dec 2 2019)
+ Now you have 4 tasks in the list.
 ____________________________________________________________
 ____________________________________________________________
  Got it. I've added this task:
-   [E][ ] team meeting (from: Mon 2pm to: 4pm)
+   [E][ ] project presentation (from: Dec 2 2019, 10:00am to: Dec 2 2019, 12:00pm)
+ Now you have 5 tasks in the list.
+____________________________________________________________
+____________________________________________________________
+ Here are the tasks in your list:
+ 1.[T][ ] read book
+ 2.[D][X] submit report (by: Dec 2 2019)
+ 3.[E][ ] team meeting (from: Dec 15 2019, 2:00pm to: Dec 15 2019, 4:00pm)
+ 4.[D][ ] return book (by: Dec 2 2019)
+ 5.[E][ ] project presentation (from: Dec 2 2019, 10:00am to: Dec 2 2019, 12:00pm)
+____________________________________________________________
+____________________________________________________________
+ Here are the tasks on Dec 2 2019:
+ 1.[D][X] submit report (by: Dec 2 2019)
+ 2.[D][ ] return book (by: Dec 2 2019)
+ 3.[E][ ] project presentation (from: Dec 2 2019, 10:00am to: Dec 2 2019, 12:00pm)
+____________________________________________________________
+____________________________________________________________
+ Here are the tasks on Dec 15 2019:
+ 1.[E][ ] team meeting (from: Dec 15 2019, 2:00pm to: Dec 15 2019, 4:00pm)
+____________________________________________________________
+____________________________________________________________
+ No tasks found on Dec 1 2019
+____________________________________________________________
+____________________________________________________________
+ OK, I've marked this task as not done yet:
+  [D][ ] submit report (by: Dec 2 2019)
+____________________________________________________________
+____________________________________________________________
+ Noted. I've removed this task:
+   [D][ ] return book (by: Dec 2 2019)
  Now you have 4 tasks in the list.
 ____________________________________________________________
 ____________________________________________________________
  Here are the tasks in your list:
- 1.[T][X] read book
- 2.[T][ ] return book
- 3.[D][ ] submit report (by: Sunday)
- 4.[E][ ] team meeting (from: Mon 2pm to: 4pm)
+ 1.[T][ ] read book
+ 2.[D][ ] submit report (by: Dec 2 2019)
+ 3.[E][ ] team meeting (from: Dec 15 2019, 2:00pm to: Dec 15 2019, 4:00pm)
+ 4.[E][ ] project presentation (from: Dec 2 2019, 10:00am to: Dec 2 2019, 12:00pm)
 ____________________________________________________________
 ____________________________________________________________
- OK, I've marked this task as not done yet:
-  [T][ ] read book
+ Got it. I've added this task:
+   [T][ ] another task
+ Now you have 5 tasks in the list.
+____________________________________________________________
+____________________________________________________________
+ OOPS!!! Invalid date format. Please use yyyy-MM-dd format (e.g., 2019-12-02)
+____________________________________________________________
+____________________________________________________________
+ Got it. I've added this task:
+   [D][ ] valid date test (by: Jan 15 2024)
+ Now you have 6 tasks in the list.
+____________________________________________________________
+____________________________________________________________
+ OOPS!!! Invalid datetime format. Please use formats like: 2019-12-02 1800, 2019-12-02 18:00, or 2019-12-02
+____________________________________________________________
+____________________________________________________________
+ Got it. I've added this task:
+   [E][ ] valid time test (from: Jan 15 2024, 9:00am to: Jan 15 2024, 5:00pm)
+ Now you have 7 tasks in the list.
 ____________________________________________________________
 ____________________________________________________________
  Here are the tasks in your list:
  1.[T][ ] read book
- 2.[T][ ] return book
- 3.[D][ ] submit report (by: Sunday)
- 4.[E][ ] team meeting (from: Mon 2pm to: 4pm)
+ 2.[D][ ] submit report (by: Dec 2 2019)
+ 3.[E][ ] team meeting (from: Dec 15 2019, 2:00pm to: Dec 15 2019, 4:00pm)
+ 4.[E][ ] project presentation (from: Dec 2 2019, 10:00am to: Dec 2 2019, 12:00pm)
+ 5.[T][ ] another task
+ 6.[D][ ] valid date test (by: Jan 15 2024)
+ 7.[E][ ] valid time test (from: Jan 15 2024, 9:00am to: Jan 15 2024, 5:00pm)
 ____________________________________________________________
 ____________________________________________________________
- Nice! I've marked this task as done:
-  [D][X] submit report (by: Sunday)
-____________________________________________________________
-____________________________________________________________
- Nice! I've marked this task as done:
-  [E][X] team meeting (from: Mon 2pm to: 4pm)
-____________________________________________________________
-____________________________________________________________
- Here are the tasks in your list:
- 1.[T][ ] read book
- 2.[T][ ] return book
- 3.[D][X] submit report (by: Sunday)
- 4.[E][X] team meeting (from: Mon 2pm to: 4pm)
-____________________________________________________________
-____________________________________________________________
- OK, I've marked this task as not done yet:
-  [D][ ] submit report (by: Sunday)
-____________________________________________________________
-____________________________________________________________
- Noted. I've removed this task:
-   [D][ ] submit report (by: Sunday)
- Now you have 3 tasks in the list.
-____________________________________________________________
-____________________________________________________________
- Here are the tasks in your list:
- 1.[T][ ] read book
- 2.[T][ ] return book
- 3.[E][X] team meeting (from: Mon 2pm to: 4pm)
-____________________________________________________________
-____________________________________________________________
- Noted. I've removed this task:
-   [T][ ] read book
- Now you have 2 tasks in the list.
-____________________________________________________________
-____________________________________________________________
- Here are the tasks in your list:
- 1.[T][ ] return book
- 2.[E][X] team meeting (from: Mon 2pm to: 4pm)
-____________________________________________________________
-____________________________________________________________
- OOPS!!! The description of a todo cannot be empty.
-____________________________________________________________
-____________________________________________________________
- OOPS!!! I'm sorry, but I don't know what that means :-(
-____________________________________________________________
-____________________________________________________________
- OOPS!!! The description of a deadline cannot be empty.
-____________________________________________________________
-____________________________________________________________
- OOPS!!! The description of an event cannot be empty.
-____________________________________________________________
-____________________________________________________________
- OOPS!!! Please use format: deadline <description> /by <time>
-____________________________________________________________
-____________________________________________________________
- OOPS!!! Please use format: event <description> /from <start> /to <end>
-____________________________________________________________
-____________________________________________________________
- OOPS!!! Please use format: event <description> /from <start> /to <end>
-____________________________________________________________
-____________________________________________________________
- OOPS!!! Please specify which task to mark.
-____________________________________________________________
-____________________________________________________________
- OOPS!!! Please provide a valid task number.
-____________________________________________________________
-____________________________________________________________
- OOPS!!! Task number 99 does not exist.
-____________________________________________________________
-____________________________________________________________
- OOPS!!! Please specify which task to delete.
-____________________________________________________________
-____________________________________________________________
- OOPS!!! Please provide a valid task number.
-____________________________________________________________
-____________________________________________________________
- OOPS!!! Task number 99 does not exist.
+ Here are the tasks on Jan 15 2024:
+ 1.[D][ ] valid date test (by: Jan 15 2024)
+ 2.[E][ ] valid time test (from: Jan 15 2024, 9:00am to: Jan 15 2024, 5:00pm)
 ____________________________________________________________
 ____________________________________________________________
  Bye. Hope to see you again soon!
