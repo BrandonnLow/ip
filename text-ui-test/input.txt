@@ -1,32 +1,23 @@
 todo read book
-todo return book
+deadline submit report /by 2019-12-02
+event team meeting /from 2019-12-15 1400 /to 2019-12-15 1600
 list
-mark 1
+mark 2
 list
-deadline submit report /by Sunday
-event team meeting /from Mon 2pm /to 4pm
+deadline return book /by 2019-12-02
+event project presentation /from 2019-12-02 1000 /to 2019-12-02 1200
 list
-unmark 1
+find 2019-12-02
+find 2019-12-15
+find 2019-12-01
+unmark 2
+delete 4
 list
-mark 3
-mark 4
+todo another task
+deadline invalid date test /by 2019-13-45
+deadline valid date test /by 2024-01-15
+event invalid time test /from 2019-12-02 2500 /to 2019-12-02 1800
+event valid time test /from 2024-01-15 0900 /to 2024-01-15 1700
 list
-unmark 3
-delete 3
-list
-delete 1
-list
-todo
-blah
-deadline
-event
-deadline incomplete
-event incomplete /from
-event incomplete /from start /to
-mark
-mark abc
-mark 99
-delete
-delete abc
-delete 99
+find 2024-01-15
 bye
