@@ -23,14 +23,17 @@ public class Task {
         this.isDone = false;
     }
 
-    private String getDescription() {
-        return description;
+    public String getDescription() {
+        return this.description;
     }
 
     public TaskType getType() {
         return this.type;
     }
 
+    public boolean isDone() {
+        return this.isDone;
+    }
 
     @Override
     public String toString() {
