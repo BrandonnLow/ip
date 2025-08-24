@@ -1,8 +1,10 @@
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 
 public class Pingpong {
     private static ArrayList<Task> tasks = new ArrayList<>();
@@ -70,7 +72,7 @@ public class Pingpong {
         try {
             String[] parts = line.split(" \\| ");
             if (parts.length < 3) {
-                return null; // Invalid format
+                return null;
             }
 
             String type = parts[0].trim();
@@ -84,15 +86,24 @@ public class Pingpong {
                     break;
                 case "D":
                     if (parts.length >= 4) {
-                        String by = parts[3].trim();
-                        task = new Deadline(description, by);
+                        try {
+                            LocalDate by = LocalDate.parse(parts[3].trim(), DateTimeFormatter.ISO_LOCAL_DATE);
+                            task = new Deadline(description, by);
+                        } catch (DateTimeParseException e) {
+                            System.out.println("Warning: Invalid date format in file for deadline: " + line);
+                            return null;
+                        }
                     }
                     break;
                 case "E":
-                    if (parts.length >= 4) {
-                        String[] timeRange = parts[3].trim().split(" to ");
-                        if (timeRange.length == 2) {
-                            task = new Event(description, timeRange[0].trim(), timeRange[1].trim());
+                    if (parts.length >= 5) {
+                        try {
+                            LocalDateTime start = LocalDateTime.parse(parts[3].trim(), DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+                            LocalDateTime end = LocalDateTime.parse(parts[4].trim(), DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+                            task = new Event(description, start, end);
+                        } catch (DateTimeParseException e) {
+                            System.out.println("Warning: Invalid datetime format in file for event: " + line);
+                            return null;
                         }
                     }
                     break;
@@ -111,7 +122,6 @@ public class Pingpong {
 
     private static void saveTasks() {
         try {
-            // Ensure data directory exists
             File dataDir = new File(DATA_DIRECTORY);
             if (!dataDir.exists()) {
                 dataDir.mkdirs();
@@ -141,13 +151,40 @@ public class Pingpong {
                 return String.format("%s | %s | %s", type, isDone, description);
             case DEADLINE:
                 Deadline deadline = (Deadline) task;
-                return String.format("%s | %s | %s | %s", type, isDone, description, deadline.getBy());
+                return String.format("%s | %s | %s | %s", type, isDone, description, deadline.getByForFile());
             case Event:
                 Event event = (Event) task;
-                return String.format("%s | %s | %s | %s to %s", type, isDone, description,
-                        event.getStart(), event.getEnd());
+                return String.format("%s | %s | %s | %s | %s", type, isDone, description,
+                        event.getStartForFile(), event.getEndForFile());
             default:
                 return String.format("%s | %s | %s", type, isDone, description);
+        }
+    }
+
+    private static LocalDate parseDate(String dateStr) throws PingpongException {
+        try {
+            return LocalDate.parse(dateStr, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        } catch (DateTimeParseException e) {
+            throw new PingpongException("Invalid date format. Please use yyyy-MM-dd format (e.g., 2019-12-02)");
+        }
+    }
+
+    private static LocalDateTime parseDateTime(String dateTimeStr) throws PingpongException {
+        try {
+            if (dateTimeStr.matches("\\d{4}-\\d{2}-\\d{2} \\d{4}")) {
+                return LocalDateTime.parse(dateTimeStr, DateTimeFormatter.ofPattern("yyyy-MM-dd HHmm"));
+            }
+            else if (dateTimeStr.matches("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}")) {
+                return LocalDateTime.parse(dateTimeStr, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
+            }
+            else if (dateTimeStr.matches("\\d{4}-\\d{2}-\\d{2}")) {
+                return LocalDate.parse(dateTimeStr, DateTimeFormatter.ofPattern("yyyy-MM-dd")).atStartOfDay();
+            }
+            else {
+                throw new DateTimeParseException("Unsupported format", dateTimeStr, 0);
+            }
+        } catch (DateTimeParseException e) {
+            throw new PingpongException("Invalid datetime format. Please use formats like: 2019-12-02 1800, 2019-12-02 18:00, or 2019-12-02");
         }
     }
 
@@ -176,6 +213,10 @@ public class Pingpong {
             handleEvent(input);
         } else if (input.equals("delete") || input.equals("delete ") || input.startsWith("delete ")) {
             handleDelete(input);
+        } else if (input.equals("find") || input.equals("find ")) {
+            throw new PingpongException("Please specify a date to find tasks. Format: find yyyy-MM-dd");
+        } else if (input.startsWith("find ")) {
+            handleFind(input);
         } else {
             throw new PingpongException("I'm sorry, but I don't know what that means :-(");
         }
@@ -185,6 +226,47 @@ public class Pingpong {
         System.out.println(" Here are the tasks in your list:");
         for (int i = 0; i < tasks.size(); i++) {
             System.out.println(" " + (i + 1) + "." + tasks.get(i));
+        }
+    }
+
+    private static void handleFind(String input) throws PingpongException {
+        String dateStr = input.substring(5).trim();
+        if (dateStr.isEmpty()) {
+            throw new PingpongException("Please specify a date to find tasks. Format: find yyyy-MM-dd");
+        }
+
+        LocalDate targetDate = parseDate(dateStr);
+        ArrayList<Task> matchingTasks = new ArrayList<>();
+
+        for (Task task : tasks) {
+            boolean matches = false;
+
+            if (task instanceof Deadline) {
+                Deadline deadline = (Deadline) task;
+                if (deadline.getBy().equals(targetDate)) {
+                    matches = true;
+                }
+            } else if (task instanceof Event) {
+                Event event = (Event) task;
+                LocalDate startDate = event.getStart().toLocalDate();
+                LocalDate endDate = event.getEnd().toLocalDate();
+                if (!targetDate.isBefore(startDate) && !targetDate.isAfter(endDate)) {
+                    matches = true;
+                }
+            }
+
+            if (matches) {
+                matchingTasks.add(task);
+            }
+        }
+
+        if (matchingTasks.isEmpty()) {
+            System.out.println(" No tasks found on " + targetDate.format(DateTimeFormatter.ofPattern("MMM d yyyy")));
+        } else {
+            System.out.println(" Here are the tasks on " + targetDate.format(DateTimeFormatter.ofPattern("MMM d yyyy")) + ":");
+            for (int i = 0; i < matchingTasks.size(); i++) {
+                System.out.println(" " + (i + 1) + "." + matchingTasks.get(i));
+            }
         }
     }
 
@@ -257,19 +339,20 @@ public class Pingpong {
     private static void handleDeadline(String input) throws PingpongException {
         String[] parts = input.substring(9).split(" /by ");
         if (parts.length != 2) {
-            throw new PingpongException("Please use format: deadline <description> /by <time>");
+            throw new PingpongException("Please use format: deadline <description> /by <yyyy-MM-dd>");
         }
 
         String description = parts[0].trim();
-        String by = parts[1].trim();
+        String byStr = parts[1].trim();
 
         if (description.isEmpty()) {
             throw new PingpongException("The description of a deadline cannot be empty.");
         }
-        if (by.isEmpty()) {
-            throw new PingpongException("The deadline time cannot be empty.");
+        if (byStr.isEmpty()) {
+            throw new PingpongException("The deadline date cannot be empty.");
         }
 
+        LocalDate by = parseDate(byStr);
         Task newTask = new Deadline(description, by);
         tasks.add(newTask);
         System.out.println(" Got it. I've added this task:");
@@ -282,26 +365,33 @@ public class Pingpong {
         String remaining = input.substring(6);
         String[] fromParts = remaining.split(" /from ");
         if (fromParts.length != 2) {
-            throw new PingpongException("Please use format: event <description> /from <start> /to <end>");
+            throw new PingpongException("Please use format: event <description> /from <yyyy-MM-dd HHmm> /to <yyyy-MM-dd HHmm>");
         }
 
         String description = fromParts[0].trim();
         String[] toParts = fromParts[1].split(" /to ");
         if (toParts.length != 2) {
-            throw new PingpongException("Please use format: event <description> /from <start> /to <end>");
+            throw new PingpongException("Please use format: event <description> /from <yyyy-MM-dd HHmm> /to <yyyy-MM-dd HHmm>");
         }
 
-        String from = toParts[0].trim();
-        String to = toParts[1].trim();
+        String fromStr = toParts[0].trim();
+        String toStr = toParts[1].trim();
 
         if (description.isEmpty()) {
             throw new PingpongException("The description of an event cannot be empty.");
         }
-        if (from.isEmpty()) {
+        if (fromStr.isEmpty()) {
             throw new PingpongException("The event start time cannot be empty.");
         }
-        if (to.isEmpty()) {
+        if (toStr.isEmpty()) {
             throw new PingpongException("The event end time cannot be empty.");
+        }
+
+        LocalDateTime from = parseDateTime(fromStr);
+        LocalDateTime to = parseDateTime(toStr);
+
+        if (from.isAfter(to)) {
+            throw new PingpongException("Event start time cannot be after end time.");
         }
 
         Task newTask = new Event(description, from, to);
