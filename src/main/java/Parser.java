@@ -4,17 +4,23 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
 /**
- * Handles parsing of user commands
+ * Handles parsing of user commands and returns Command objects
  */
 public class Parser {
 
-    public static ParsedCommand parse(String input) throws PingpongException {
+    /**
+     * Parses user input and returns appropriate Command object
+     * @param input User input string
+     * @return Command object to execute
+     * @throws PingpongException if command format is invalid
+     */
+    public static Command parse(String input) throws PingpongException {
         if (input.trim().isEmpty()) {
             throw new PingpongException("Please enter a command.");
         }
 
         if (input.equals("list")) {
-            return new ParsedCommand(CommandType.LIST);
+            return new ListCommand();
         } else if (input.equals("mark") || input.equals("mark ") || input.startsWith("mark ")) {
             return parseMarkCommand(input);
         } else if (input.equals("unmark") || input.equals("unmark ") || input.startsWith("unmark ")) {
@@ -42,7 +48,7 @@ public class Parser {
         }
     }
 
-    private static ParsedCommand parseMarkCommand(String input) throws PingpongException {
+    private static Command parseMarkCommand(String input) throws PingpongException {
         String numberStr = "";
         if (input.length() > 4) {
             numberStr = input.substring(4).trim();
@@ -52,13 +58,13 @@ public class Parser {
         }
         try {
             int taskNum = Integer.parseInt(numberStr);
-            return new ParsedCommand(CommandType.MARK, taskNum);
+            return new MarkCommand(taskNum);
         } catch (NumberFormatException e) {
             throw new PingpongException("Please provide a valid task number.");
         }
     }
 
-    private static ParsedCommand parseUnmarkCommand(String input) throws PingpongException {
+    private static Command parseUnmarkCommand(String input) throws PingpongException {
         String numberStr = "";
         if (input.length() > 6) {
             numberStr = input.substring(6).trim();
@@ -68,21 +74,21 @@ public class Parser {
         }
         try {
             int taskNum = Integer.parseInt(numberStr);
-            return new ParsedCommand(CommandType.UNMARK, taskNum);
+            return new UnmarkCommand(taskNum);
         } catch (NumberFormatException e) {
             throw new PingpongException("Please provide a valid task number.");
         }
     }
 
-    private static ParsedCommand parseTodoCommand(String input) throws PingpongException {
+    private static Command parseTodoCommand(String input) throws PingpongException {
         String description = input.substring(5).trim();
         if (description.isEmpty()) {
             throw new PingpongException("The description of a todo cannot be empty.");
         }
-        return new ParsedCommand(CommandType.TODO, description);
+        return new AddTodoCommand(description);
     }
 
-    private static ParsedCommand parseDeadlineCommand(String input) throws PingpongException {
+    private static Command parseDeadlineCommand(String input) throws PingpongException {
         String[] parts = input.substring(9).split(" /by ");
         if (parts.length != 2) {
             throw new PingpongException("Please use format: deadline <description> /by <yyyy-MM-dd>");
@@ -96,10 +102,10 @@ public class Parser {
             throw new PingpongException("The deadline date cannot be empty.");
         }
         LocalDate by = parseDate(byStr);
-        return new ParsedCommand(CommandType.DEADLINE, description, by);
+        return new AddDeadlineCommand(description, by);
     }
 
-    private static ParsedCommand parseEventCommand(String input) throws PingpongException {
+    private static Command parseEventCommand(String input) throws PingpongException {
         String remaining = input.substring(6);
         String[] fromParts = remaining.split(" /from ");
         if (fromParts.length != 2) {
@@ -126,10 +132,10 @@ public class Parser {
         if (from.isAfter(to)) {
             throw new PingpongException("Event start time cannot be after end time.");
         }
-        return new ParsedCommand(CommandType.EVENT, description, from, to);
+        return new AddEventCommand(description, from, to);
     }
 
-    private static ParsedCommand parseDeleteCommand(String input) throws PingpongException {
+    private static Command parseDeleteCommand(String input) throws PingpongException {
         String numberStr = "";
         if (input.length() > 6) {
             numberStr = input.substring(6).trim();
@@ -139,19 +145,19 @@ public class Parser {
         }
         try {
             int taskNum = Integer.parseInt(numberStr);
-            return new ParsedCommand(CommandType.DELETE, taskNum);
+            return new DeleteCommand(taskNum);
         } catch (NumberFormatException e) {
             throw new PingpongException("Please provide a valid task number.");
         }
     }
 
-    private static ParsedCommand parseFindCommand(String input) throws PingpongException {
+    private static Command parseFindCommand(String input) throws PingpongException {
         String dateStr = input.substring(5).trim();
         if (dateStr.isEmpty()) {
             throw new PingpongException("Please specify a date to find tasks. Format: find yyyy-MM-dd");
         }
         LocalDate targetDate = parseDate(dateStr);
-        return new ParsedCommand(CommandType.FIND, targetDate);
+        return new FindCommand(targetDate);
     }
 
     private static LocalDate parseDate(String dateStr) throws PingpongException {
