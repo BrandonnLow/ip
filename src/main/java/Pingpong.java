@@ -1,5 +1,4 @@
 import java.util.ArrayList;
-import java.util.Scanner;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -7,35 +6,29 @@ import java.time.format.DateTimeParseException;
 
 public class Pingpong {
     private static ArrayList<Task> tasks = new ArrayList<>();
-    private static Scanner scanner = new Scanner(System.in);
     private static Storage storage = new Storage("./data/pingpong.txt");
+    private static Ui ui = new Ui();
 
     public static void main(String[] args) {
         tasks = storage.load();
 
-        System.out.println("____________________________________________________________");
-        System.out.println(" Hello! I'm Pingpong");
-        System.out.println(" What can I do for you?");
-        System.out.println("____________________________________________________________");
+        ui.showWelcome();
 
         String input;
-        while (!(input = scanner.nextLine()).equals("bye")) {
-            System.out.println("____________________________________________________________");
+        while (!(input = ui.readCommand()).equals("bye")) {
+            ui.showLine();
 
             try {
                 processCommand(input);
             } catch (PingpongException e) {
-                System.out.println(" OOPS!!! " + e.getMessage());
+                ui.showError(e.getMessage());
             }
 
-            System.out.println("____________________________________________________________");
+            ui.showLine();
         }
 
-        System.out.println("____________________________________________________________");
-        System.out.println(" Bye. Hope to see you again soon!");
-        System.out.println("____________________________________________________________");
-
-        scanner.close();
+        ui.showGoodbye();
+        ui.close();
     }
 
     private static LocalDate parseDate(String dateStr) throws PingpongException {
@@ -100,10 +93,7 @@ public class Pingpong {
     }
 
     private static void listTasks() {
-        System.out.println(" Here are the tasks in your list:");
-        for (int i = 0; i < tasks.size(); i++) {
-            System.out.println(" " + (i + 1) + "." + tasks.get(i));
-        }
+        ui.showTaskList(tasks);
     }
 
     private static void handleFind(String input) throws PingpongException {
@@ -137,14 +127,8 @@ public class Pingpong {
             }
         }
 
-        if (matchingTasks.isEmpty()) {
-            System.out.println(" No tasks found on " + targetDate.format(DateTimeFormatter.ofPattern("MMM d yyyy")));
-        } else {
-            System.out.println(" Here are the tasks on " + targetDate.format(DateTimeFormatter.ofPattern("MMM d yyyy")) + ":");
-            for (int i = 0; i < matchingTasks.size(); i++) {
-                System.out.println(" " + (i + 1) + "." + matchingTasks.get(i));
-            }
-        }
+        String formattedDate = targetDate.format(DateTimeFormatter.ofPattern("MMM d yyyy"));
+        ui.showFoundTasks(matchingTasks, formattedDate);
     }
 
     private static void handleMark(String input) throws PingpongException {
@@ -165,8 +149,7 @@ public class Pingpong {
 
             Task task = tasks.get(taskNum);
             task.markAsDone();
-            System.out.println(" Nice! I've marked this task as done:");
-            System.out.println("  " + task);
+            ui.showTaskMarked(task);
             storage.save(tasks);
         } catch (NumberFormatException e) {
             throw new PingpongException("Please provide a valid task number.");
@@ -191,8 +174,7 @@ public class Pingpong {
 
             Task task = tasks.get(taskNum);
             task.markAsUndone();
-            System.out.println(" OK, I've marked this task as not done yet:");
-            System.out.println("  " + task);
+            ui.showTaskUnmarked(task);
             storage.save(tasks);
         } catch (NumberFormatException e) {
             throw new PingpongException("Please provide a valid task number.");
@@ -207,9 +189,7 @@ public class Pingpong {
 
         Task newTask = new Todo(description);
         tasks.add(newTask);
-        System.out.println(" Got it. I've added this task:");
-        System.out.println("   " + newTask);
-        System.out.println(" Now you have " + tasks.size() + " tasks in the list.");
+        ui.showTaskAdded(newTask, tasks.size());
         storage.save(tasks);
     }
 
@@ -232,9 +212,7 @@ public class Pingpong {
         LocalDate by = parseDate(byStr);
         Task newTask = new Deadline(description, by);
         tasks.add(newTask);
-        System.out.println(" Got it. I've added this task:");
-        System.out.println("   " + newTask);
-        System.out.println(" Now you have " + tasks.size() + " tasks in the list.");
+        ui.showTaskAdded(newTask, tasks.size());
         storage.save(tasks);
     }
 
@@ -273,9 +251,7 @@ public class Pingpong {
 
         Task newTask = new Event(description, from, to);
         tasks.add(newTask);
-        System.out.println(" Got it. I've added this task:");
-        System.out.println("   " + newTask);
-        System.out.println(" Now you have " + tasks.size() + " tasks in the list.");
+        ui.showTaskAdded(newTask, tasks.size());
         storage.save(tasks);
     }
 
@@ -297,9 +273,7 @@ public class Pingpong {
 
             Task task = tasks.get(taskNum);
             tasks.remove(taskNum);
-            System.out.println(" Noted. I've removed this task:");
-            System.out.println("   " + task);
-            System.out.println(" Now you have " + tasks.size() + " tasks in the list.");
+            ui.showTaskDeleted(task, tasks.size());
             storage.save(tasks);
         } catch (NumberFormatException e) {
             throw new PingpongException("Please provide a valid task number.");
