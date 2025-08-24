@@ -1,11 +1,18 @@
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 public class Pingpong {
     private static ArrayList<Task> tasks = new ArrayList<>();
     private static Scanner scanner = new Scanner(System.in);
+    private static final String DATA_DIRECTORY = "./data";
+    private static final String DATA_FILE_PATH = "./data/pingpong.txt";
 
     public static void main(String[] args) {
+        loadTasks();
+
         System.out.println("____________________________________________________________");
         System.out.println(" Hello! I'm Pingpong");
         System.out.println(" What can I do for you?");
@@ -29,6 +36,119 @@ public class Pingpong {
         System.out.println("____________________________________________________________");
 
         scanner.close();
+    }
+
+    private static void loadTasks() {
+        try {
+            File dataDir = new File(DATA_DIRECTORY);
+            if (!dataDir.exists()) {
+                dataDir.mkdirs();
+            }
+
+            File dataFile = new File(DATA_FILE_PATH);
+            if (!dataFile.exists()) {
+                return;
+            }
+
+            Scanner fileScanner = new Scanner(dataFile);
+            while (fileScanner.hasNextLine()) {
+                String line = fileScanner.nextLine().trim();
+                if (!line.isEmpty()) {
+                    Task task = parseTaskFromFile(line);
+                    if (task != null) {
+                        tasks.add(task);
+                    }
+                }
+            }
+            fileScanner.close();
+        } catch (IOException e) {
+            System.out.println("Error loading tasks from file: " + e.getMessage());
+        }
+    }
+
+    private static Task parseTaskFromFile(String line) {
+        try {
+            String[] parts = line.split(" \\| ");
+            if (parts.length < 3) {
+                return null; // Invalid format
+            }
+
+            String type = parts[0].trim();
+            boolean isDone = parts[1].trim().equals("1");
+            String description = parts[2].trim();
+
+            Task task = null;
+            switch (type) {
+                case "T":
+                    task = new Todo(description);
+                    break;
+                case "D":
+                    if (parts.length >= 4) {
+                        String by = parts[3].trim();
+                        task = new Deadline(description, by);
+                    }
+                    break;
+                case "E":
+                    if (parts.length >= 4) {
+                        String[] timeRange = parts[3].trim().split(" to ");
+                        if (timeRange.length == 2) {
+                            task = new Event(description, timeRange[0].trim(), timeRange[1].trim());
+                        }
+                    }
+                    break;
+            }
+
+            if (task != null && isDone) {
+                task.markAsDone();
+            }
+
+            return task;
+        } catch (Exception e) {
+            System.out.println("Warning: Skipping corrupted task data: " + line);
+            return null;
+        }
+    }
+
+    private static void saveTasks() {
+        try {
+            // Ensure data directory exists
+            File dataDir = new File(DATA_DIRECTORY);
+            if (!dataDir.exists()) {
+                dataDir.mkdirs();
+            }
+
+            FileWriter fileWriter = new FileWriter(DATA_FILE_PATH);
+            PrintWriter printWriter = new PrintWriter(fileWriter);
+
+            for (Task task : tasks) {
+                String line = formatTaskForFile(task);
+                printWriter.println(line);
+            }
+
+            printWriter.close();
+        } catch (IOException e) {
+            System.out.println("Error saving tasks to file: " + e.getMessage());
+        }
+    }
+
+    private static String formatTaskForFile(Task task) {
+        String isDone = task.isDone() ? "1" : "0";
+        String type = task.getType().getSymbol();
+        String description = task.getDescription();
+
+        switch (task.getType()) {
+            case TODO:
+                return String.format("%s | %s | %s", type, isDone, description);
+            case DEADLINE:
+                Deadline deadline = (Deadline) task;
+                return String.format("%s | %s | %s | %s", type, isDone, description, deadline.getBy());
+            case Event:
+                Event event = (Event) task;
+                return String.format("%s | %s | %s | %s to %s", type, isDone, description,
+                        event.getStart(), event.getEnd());
+            default:
+                return String.format("%s | %s | %s", type, isDone, description);
+        }
     }
 
     private static void processCommand(String input) throws PingpongException {
@@ -88,6 +208,7 @@ public class Pingpong {
             task.markAsDone();
             System.out.println(" Nice! I've marked this task as done:");
             System.out.println("  " + task);
+            saveTasks();
         } catch (NumberFormatException e) {
             throw new PingpongException("Please provide a valid task number.");
         }
@@ -113,6 +234,7 @@ public class Pingpong {
             task.markAsUndone();
             System.out.println(" OK, I've marked this task as not done yet:");
             System.out.println("  " + task);
+            saveTasks();
         } catch (NumberFormatException e) {
             throw new PingpongException("Please provide a valid task number.");
         }
@@ -129,6 +251,7 @@ public class Pingpong {
         System.out.println(" Got it. I've added this task:");
         System.out.println("   " + newTask);
         System.out.println(" Now you have " + tasks.size() + " tasks in the list.");
+        saveTasks();
     }
 
     private static void handleDeadline(String input) throws PingpongException {
@@ -152,6 +275,7 @@ public class Pingpong {
         System.out.println(" Got it. I've added this task:");
         System.out.println("   " + newTask);
         System.out.println(" Now you have " + tasks.size() + " tasks in the list.");
+        saveTasks();
     }
 
     private static void handleEvent(String input) throws PingpongException {
@@ -185,6 +309,7 @@ public class Pingpong {
         System.out.println(" Got it. I've added this task:");
         System.out.println("   " + newTask);
         System.out.println(" Now you have " + tasks.size() + " tasks in the list.");
+        saveTasks();
     }
 
     private static void handleDelete(String input) throws PingpongException {
@@ -208,6 +333,7 @@ public class Pingpong {
             System.out.println(" Noted. I've removed this task:");
             System.out.println("   " + task);
             System.out.println(" Now you have " + tasks.size() + " tasks in the list.");
+            saveTasks();
         } catch (NumberFormatException e) {
             throw new PingpongException("Please provide a valid task number.");
         }
