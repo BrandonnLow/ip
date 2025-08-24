@@ -3,13 +3,30 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+/**
+ * Main class for the Pingpong task management app
+ */
 public class Pingpong {
-    private static ArrayList<Task> tasks = new ArrayList<>();
-    private static Storage storage = new Storage("./data/pingpong.txt");
-    private static Ui ui = new Ui();
+    private TaskList tasks;
+    private Storage storage;
+    private static Ui ui;
+
+    public Pingpong(String filePath) {
+        ui = new Ui();
+        storage = new Storage(filePath);
+        try {
+            tasks = new TaskList(storage.load());
+        } catch (Exception e) {
+            ui.showError("Error loading tasks from file. Starting with empty task list.");
+            tasks = new TaskList();
+        }
+    }
 
     public static void main(String[] args) {
-        tasks = storage.load();
+        new Pingpong("./data/pingpong.txt").run();
+    }
+
+    public void run() {
 
         ui.showWelcome();
 
@@ -31,125 +48,61 @@ public class Pingpong {
         ui.close();
     }
 
-    private static void executeCommand(ParsedCommand command) throws PingpongException {
+    private void executeCommand(ParsedCommand command) throws PingpongException {
         switch (command.getType()) {
             case LIST:
-                ui.showTaskList(tasks);
+                ui.showTaskList(tasks.getAllTasks());
                 break;
 
             case MARK:
-                handleMark(command.getTaskNumber());
+                Task markedTask = tasks.markTask(command.getTaskNumber() - 1);
+                ui.showTaskMarked(markedTask);
+                saveTasksToStorage();
                 break;
 
             case UNMARK:
-                handleUnmark(command.getTaskNumber());
+                Task unmarkedTest = tasks.unmarkTask(command.getTaskNumber() - 1);
+                ui.showTaskUnmarked(unmarkedTest);
+                saveTasksToStorage();
                 break;
 
             case TODO:
-                handleTodo(command.getDescription());
+                Task todo = tasks.addTodo(command.getDescription());
+                ui.showTaskAdded(todo, tasks.size());
+                saveTasksToStorage();
                 break;
 
             case DEADLINE:
-                handleDeadline(command.getDescription(), command.getDate());
+                Task deadline = tasks.addDeadline(command.getDescription(), command.getDate());
+                ui.showTaskAdded(deadline, tasks.size());
+                saveTasksToStorage();
                 break;
 
             case EVENT:
-                handleEvent(command.getDescription(), command.getStartDateTime(), command.getEndDateTime());
+                Task event = tasks.addEvent(command.getDescription(), command.getStartDateTime(), command.getEndDateTime());
+                ui.showTaskAdded(event, tasks.size());
+                saveTasksToStorage();
                 break;
 
             case DELETE:
-                handleDelete(command.getTaskNumber());
+                Task deletedTask = tasks.deleteTask(command.getTaskNumber() - 1);
+                ui.showTaskDeleted(deletedTask, tasks.size());
+                saveTasksToStorage();
                 break;
 
             case FIND:
-                handleFind(command.getDate());
+                ArrayList<Task> foundTasks = tasks.findTasksOnDate(command.getDate());
+                String formattedDate = command.getDate().format(DateTimeFormatter.ofPattern("MMM d yyyy"));
+                ui.showFoundTasks(foundTasks, formattedDate);
                 break;
         }
     }
 
-    private static void handleFind(LocalDate targetDate) throws PingpongException {
-        ArrayList<Task> matchingTasks = new ArrayList<>();
-
-        for (Task task : tasks) {
-            boolean matches = false;
-
-            if (task instanceof Deadline) {
-                Deadline deadline = (Deadline) task;
-                if (deadline.getBy().equals(targetDate)) {
-                    matches = true;
-                }
-            } else if (task instanceof Event) {
-                Event event = (Event) task;
-                LocalDate startDate = event.getStart().toLocalDate();
-                LocalDate endDate = event.getEnd().toLocalDate();
-                if (!targetDate.isBefore(startDate) && !targetDate.isAfter(endDate)) {
-                    matches = true;
-                }
-            }
-
-            if (matches) {
-                matchingTasks.add(task);
-            }
+    private void saveTasksToStorage() {
+        try {
+            storage.save(tasks.getAllTasks());
+        } catch (Exception e) {
+            ui.showError("Error saving tasks to file: " + e.getMessage());
         }
-
-        String formattedDate = targetDate.format(DateTimeFormatter.ofPattern("MMM d yyyy"));
-        ui.showFoundTasks(matchingTasks, formattedDate);
-    }
-
-    private static void handleMark(int taskNum) throws PingpongException {
-        int index = taskNum - 1;
-        if (index < 0 || index >= tasks.size()) {
-            throw new PingpongException("Task number " + taskNum + " does not exist.");
-        }
-
-        Task task = tasks.get(index);
-        task.markAsDone();
-        ui.showTaskMarked(task);
-        storage.save(tasks);
-    }
-
-    private static void handleUnmark(int taskNum) throws PingpongException {
-        int index = taskNum - 1;
-        if (index < 0 || index >= tasks.size()) {
-            throw new PingpongException("Task number " + taskNum + " does not exist.");
-        }
-
-        Task task = tasks.get(index);
-        task.markAsUndone();
-        ui.showTaskUnmarked(task);
-        storage.save(tasks);
-    }
-
-    private static void handleTodo(String description) throws PingpongException {
-        Task newTask = new Todo(description);
-        tasks.add(newTask);
-        ui.showTaskAdded(newTask, tasks.size());
-        storage.save(tasks);
-    }
-
-    private static void handleDeadline(String description, LocalDate by) throws PingpongException {
-        Task newTask = new Deadline(description, by);
-        tasks.add(newTask);
-        ui.showTaskAdded(newTask, tasks.size());
-        storage.save(tasks);
-    }
-
-    private static void handleEvent(String description, LocalDateTime from, LocalDateTime to) throws PingpongException {
-        Task newTask = new Event(description, from, to);
-        tasks.add(newTask);
-        ui.showTaskAdded(newTask, tasks.size());
-        storage.save(tasks);
-    }
-
-    private static void handleDelete(int taskNum) throws PingpongException {
-        int index = taskNum - 1;
-        if (index < 0 || index >= tasks.size()) {
-            throw new PingpongException("Task number " + taskNum + " does not exist.");
-        }
-
-        Task task = tasks.get(index);
-        tasks.remove(index);
-        ui.showTaskDeleted(task, tasks.size());
-        storage.save(tasks);
     }
 }
