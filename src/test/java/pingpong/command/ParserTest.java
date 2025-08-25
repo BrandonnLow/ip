@@ -106,17 +106,32 @@ public class ParserTest {
     }
 
     @Test
-    public void parse_findCommand_success() throws PingpongException {
+    public void parse_findByDateCommand_success() throws PingpongException {
         Command command = Parser.parse("find 2024-12-25");
 
         assertTrue(command instanceof FindCommand);
     }
 
     @Test
-    public void parse_findInvalidDate_throwsException() {
+    public void parse_findByKeywordCommand_success() throws PingpongException {
+        Command command = Parser.parse("find book");
+
+        assertTrue(command instanceof FindCommand);
+    }
+
+    @Test
+    public void parse_findInvalidDateAsKeyword_success() throws PingpongException {
+        Command command1 = Parser.parse("find invalid-date");
+        Command command2 = Parser.parse("find 25-12-2024");
+
+        assertTrue(command1 instanceof FindCommand);
+        assertTrue(command2 instanceof FindCommand);
+    }
+
+    @Test
+    public void parse_findEmpty_throwsException() {
         assertThrows(PingpongException.class, () -> Parser.parse("find"));
-        assertThrows(PingpongException.class, () -> Parser.parse("find invalid-date"));
-        assertThrows(PingpongException.class, () -> Parser.parse("find 25-12-2024"));
+        assertThrows(PingpongException.class, () -> Parser.parse("find "));
     }
 
     @Test

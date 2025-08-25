@@ -117,4 +117,84 @@ public class TaskListTest {
 
         assertTrue(foundTasks.isEmpty());
     }
+
+    @Test
+    public void findTasksByKeyword_singleMatch_returnsMatchingTask() {
+        taskList.addTodo("Buy groceries");
+        taskList.addTodo("Read book");
+        taskList.addTodo("Submit assignment");
+
+        ArrayList<Task> foundTasks = taskList.findTasksByKeyword("book");
+
+        assertEquals(1, foundTasks.size());
+        assertEquals("Read book", foundTasks.get(0).getDescription());
+    }
+
+    @Test
+    public void findTasksByKeyword_multipleMatches_returnsAllMatchingTasks() {
+        taskList.addTodo("Buy book");
+        taskList.addTodo("Read book review");
+        taskList.addTodo("Return book");
+        taskList.addTodo("Submit assignment");
+
+        ArrayList<Task> foundTasks = taskList.findTasksByKeyword("book");
+
+        assertEquals(3, foundTasks.size());
+        assertEquals("Buy book", foundTasks.get(0).getDescription());
+        assertEquals("Read book review", foundTasks.get(1).getDescription());
+        assertEquals("Return book", foundTasks.get(2).getDescription());
+    }
+
+    @Test
+    public void findTasksByKeyword_caseInsensitive_returnsMatchingTasks() {
+        taskList.addTodo("Buy BOOK");
+        taskList.addTodo("read Book");
+        taskList.addTodo("submit assignment");
+
+        ArrayList<Task> foundTasks = taskList.findTasksByKeyword("book");
+
+        assertEquals(2, foundTasks.size());
+        assertEquals("Buy BOOK", foundTasks.get(0).getDescription());
+        assertEquals("read Book", foundTasks.get(1).getDescription());
+    }
+
+    @Test
+    public void findTasksByKeyword_noMatches_returnsEmpty() {
+        taskList.addTodo("Buy groceries");
+        taskList.addTodo("Submit assignment");
+
+        ArrayList<Task> foundTasks = taskList.findTasksByKeyword("book");
+
+        assertTrue(foundTasks.isEmpty());
+    }
+
+    @Test
+    public void findTasksByKeyword_partialMatch_returnsMatchingTasks() {
+        taskList.addTodo("Bookstore visit");
+        taskList.addTodo("Facebook update");
+        taskList.addTodo("Submit assignment");
+
+        ArrayList<Task> foundTasks = taskList.findTasksByKeyword("book");
+
+        assertEquals(2, foundTasks.size());
+        assertEquals("Bookstore visit", foundTasks.get(0).getDescription());
+        assertEquals("Facebook update", foundTasks.get(1).getDescription());
+    }
+
+    @Test
+    public void findTasksByKeyword_worksWithAllTaskTypes() {
+        taskList.addTodo("Read book");
+        LocalDate deadline = LocalDate.of(2024, 12, 25);
+        taskList.addDeadline("Return book", deadline);
+        LocalDateTime start = LocalDateTime.of(2024, 12, 25, 10, 0);
+        LocalDateTime end = LocalDateTime.of(2024, 12, 25, 12, 0);
+        taskList.addEvent("Book club meeting", start, end);
+
+        ArrayList<Task> foundTasks = taskList.findTasksByKeyword("book");
+
+        assertEquals(3, foundTasks.size());
+        assertEquals("Read book", foundTasks.get(0).getDescription());
+        assertEquals("Return book", foundTasks.get(1).getDescription());
+        assertEquals("Book club meeting", foundTasks.get(2).getDescription());
+    }
 }
