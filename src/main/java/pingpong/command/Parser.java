@@ -46,7 +46,7 @@ public class Parser {
         } else if (input.equals("delete") || input.equals("delete ") || input.startsWith("delete ")) {
             return parseDeleteCommand(input);
         } else if (input.equals("find") || input.equals("find ")) {
-            throw new PingpongException("Please specify a date to find tasks. Format: find yyyy-MM-dd");
+            throw new PingpongException("Please specify a keyword or date (yyyy-MM-dd) to search for.");
         } else if (input.startsWith("find ")) {
             return parseFindCommand(input);
         } else {
@@ -214,12 +214,11 @@ public class Parser {
      * @throws PingpongException if the date is missing or in invalid format
      */
     private static Command parseFindCommand(String input) throws PingpongException {
-        String dateStr = input.substring(5).trim();
-        if (dateStr.isEmpty()) {
-            throw new PingpongException("Please specify a date to find tasks. Format: find yyyy-MM-dd");
+        String searchTerm = input.substring(5).trim();
+        if (searchTerm.isEmpty()) {
+            throw new PingpongException("Please specify a keyword or date (yyyy-MM-dd) to search for.");
         }
-        LocalDate targetDate = parseDate(dateStr);
-        return new FindCommand(targetDate);
+        return new FindCommand(searchTerm);
     }
 
     /**
