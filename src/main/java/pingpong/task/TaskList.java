@@ -113,4 +113,16 @@ public class TaskList {
         }
         return matchingTasks;
     }
+
+    public ArrayList<Task> findTasksByKeyword(String keyword) {
+        ArrayList<Task> matchingTasks = new ArrayList<>();
+        String keywordLower = keyword.toLowerCase();
+
+        for (Task task : tasks) {
+            if (task.getDescription().toLowerCase().contains(keywordLower)) {
+                matchingTasks.add(task);
+            }
+        }
+        return matchingTasks;
+    }
 }

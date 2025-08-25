@@ -69,7 +69,18 @@ public class Ui {
         System.out.println(" Now you have " + totalTasks + " tasks in the list.");
     }
 
-    public void showFoundTasks(ArrayList<Task> matchingTasks, String dateStr) {
+    public void showFoundTasksByKeyword(ArrayList<Task> matchingTasks, String keyword) {
+        if (matchingTasks.isEmpty()) {
+            System.out.println(" No matching tasks found.");
+        } else {
+            System.out.println(" Here are the matching tasks in your list:");
+            for (int i = 0; i < matchingTasks.size(); i++) {
+                System.out.println(" " + (i + 1) + "." + matchingTasks.get(i));
+            }
+        }
+    }
+
+    public void showFoundTasksByDate(ArrayList<Task> matchingTasks, String dateStr) {
         if (matchingTasks.isEmpty()) {
             System.out.println(" No tasks found on " + dateStr);
         } else {
