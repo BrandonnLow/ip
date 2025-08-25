@@ -20,4 +20,8 @@ event invalid time test /from 2019-12-02 2500 /to 2019-12-02 1800
 event valid time test /from 2024-01-15 0900 /to 2024-01-15 1700
 list
 find 2024-01-15
+find book
+find test
+find project
+find xyz
 bye
