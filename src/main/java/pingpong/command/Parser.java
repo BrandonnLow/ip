@@ -7,15 +7,18 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
 /**
- * Handles parsing of user commands and returns Command objects
+ * Handles parsing of user commands and returns appropriate Command objects.
+ * This class contains the main parsing logic for all supported commands in the Pingpong application.
  */
 public class Parser {
 
     /**
-     * Parses user input and returns appropriate Command object
-     * @param input User input string
-     * @return Command object to execute
-     * @throws PingpongException if command format is invalid
+     * Parses user input and returns the appropriate Command object for execution.
+     * Supports commands: list, mark, unmark, todo, deadline, event, delete, find.
+     *
+     * @param input the raw user input string
+     * @return the Command object corresponding to the user input
+     * @throws PingpongException if the command format is invalid or unrecognized
      */
     public static Command parse(String input) throws PingpongException {
         if (input.trim().isEmpty()) {
@@ -51,6 +54,14 @@ public class Parser {
         }
     }
 
+    /**
+     * Parses a mark command to extract the task number.
+     * Expected format: "mark <task_number>"
+     *
+     * @param input the mark command string
+     * @return a MarkCommand with the specified task number
+     * @throws PingpongException if the task number is missing or invalid
+     */
     private static Command parseMarkCommand(String input) throws PingpongException {
         String numberStr = "";
         if (input.length() > 4) {
@@ -67,6 +78,14 @@ public class Parser {
         }
     }
 
+    /**
+     * Parses an unmark command to extract the task number.
+     * Expected format: "unmark <task_number>"
+     *
+     * @param input the unmark command string
+     * @return an UnmarkCommand with the specified task number
+     * @throws PingpongException if the task number is missing or invalid
+     */
     private static Command parseUnmarkCommand(String input) throws PingpongException {
         String numberStr = "";
         if (input.length() > 6) {
@@ -83,6 +102,14 @@ public class Parser {
         }
     }
 
+    /**
+     * Parses a todo command to extract the task description.
+     * Expected format: "todo <description>"
+     *
+     * @param input the todo command string
+     * @return an AddTodoCommand with the specified description
+     * @throws PingpongException if the description is empty
+     */
     private static Command parseTodoCommand(String input) throws PingpongException {
         String description = input.substring(5).trim();
         if (description.isEmpty()) {
@@ -91,6 +118,14 @@ public class Parser {
         return new AddTodoCommand(description);
     }
 
+    /**
+     * Parses a deadline command to extract the description and deadline date.
+     * Expected format: "deadline <description> /by <yyyy-MM-dd>"
+     *
+     * @param input the deadline command string
+     * @return an AddDeadlineCommand with the specified description and date
+     * @throws PingpongException if the format is invalid or dates cannot be parsed
+     */
     private static Command parseDeadlineCommand(String input) throws PingpongException {
         String[] parts = input.substring(9).split(" /by ");
         if (parts.length != 2) {
@@ -108,6 +143,14 @@ public class Parser {
         return new AddDeadlineCommand(description, by);
     }
 
+    /**
+     * Parses an event command to extract the description, start time, and end time.
+     * Expected format: "event <description> /from <yyyy-MM-dd HHmm> /to <yyyy-MM-dd HHmm>"
+     *
+     * @param input the event command string
+     * @return an AddEventCommand with the specified description and time range
+     * @throws PingpongException if the format is invalid, dates cannot be parsed, or start time is after end time
+     */
     private static Command parseEventCommand(String input) throws PingpongException {
         String remaining = input.substring(6);
         String[] fromParts = remaining.split(" /from ");
@@ -138,6 +181,14 @@ public class Parser {
         return new AddEventCommand(description, from, to);
     }
 
+    /**
+     * Parses a delete command to extract the task number.
+     * Expected format: "delete <task_number>"
+     *
+     * @param input the delete command string
+     * @return a DeleteCommand with the specified task number
+     * @throws PingpongException if the task number is missing or invalid
+     */
     private static Command parseDeleteCommand(String input) throws PingpongException {
         String numberStr = "";
         if (input.length() > 6) {
@@ -154,6 +205,14 @@ public class Parser {
         }
     }
 
+    /**
+     * Parses a find command to extract the target date.
+     * Expected format: "find <yyyy-MM-dd>"
+     *
+     * @param input the find command string
+     * @return a FindCommand with the specified date
+     * @throws PingpongException if the date is missing or in invalid format
+     */
     private static Command parseFindCommand(String input) throws PingpongException {
         String dateStr = input.substring(5).trim();
         if (dateStr.isEmpty()) {
@@ -163,6 +222,13 @@ public class Parser {
         return new FindCommand(targetDate);
     }
 
+    /**
+     * Parses a date string in yyyy-MM-dd format into a LocalDate object.
+     *
+     * @param dateStr the date string to parse
+     * @return the parsed LocalDate
+     * @throws PingpongException if the date format is invalid
+     */
     private static LocalDate parseDate(String dateStr) throws PingpongException {
         try {
             return LocalDate.parse(dateStr, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
@@ -171,6 +237,17 @@ public class Parser {
         }
     }
 
+    /**
+     * Parses a date-time string into a LocalDateTime object.
+     * Supports multiple formats:
+     * - "yyyy-MM-dd HHmm" (e.g., "2019-12-02 1800")
+     * - "yyyy-MM-dd HH:mm" (e.g., "2019-12-02 18:00")
+     * - "yyyy-MM-dd" (treated as start of day)
+     *
+     * @param dateTimeStr the date-time string to parse
+     * @return the parsed LocalDateTime
+     * @throws PingpongException if the date-time format is invalid
+     */
     private static LocalDateTime parseDateTime(String dateTimeStr) throws PingpongException {
         try {
             if (dateTimeStr.matches("\\d{4}-\\d{2}-\\d{2} \\d{4}")) {

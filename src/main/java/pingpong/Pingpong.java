@@ -7,13 +7,20 @@ import pingpong.command.Parser;
 import pingpong.command.Command;
 
 /**
- * Main class for the Pingpong task management app
+ * Main class for the Pingpong task management application.
+ * Coordinates the interaction between the UI, task list, storage, and command parsing.
  */
 public class Pingpong {
     private TaskList tasks;
     private Storage storage;
     private static Ui ui;
 
+    /**
+     * Creates a new Pingpong application instance with the specified storage file path.
+     * Initializes the UI, storage, and loads existing tasks from file.
+     *
+     * @param filePath the path to the file where tasks are stored
+     */
     public Pingpong(String filePath) {
         ui = new Ui();
         storage = new Storage(filePath);
@@ -25,10 +32,19 @@ public class Pingpong {
         }
     }
 
+    /**
+     * The main entry point for the Pingpong application.
+     *
+     * @param args command line arguments (not used)
+     */
     public static void main(String[] args) {
         new Pingpong("./data/pingpong.txt").run();
     }
 
+    /**
+     * Starts the main application loop.
+     * Handles user input, command parsing, and execution until the user exits.
+     */
     public void run() {
         ui.showWelcome();
         boolean isExit = false;
@@ -56,6 +72,4 @@ public class Pingpong {
         ui.showGoodbye();
         ui.close();
     }
-
-
 }

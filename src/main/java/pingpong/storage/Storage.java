@@ -14,12 +14,18 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 /**
- * Handles loading and saving of tasks to/from file
+ * Handles loading and saving of tasks to/from file storage.
+ * Manages the persistence layer for the Pingpong application.
  */
 public class Storage {
     private final String filePath;
     private final String directoryPath;
 
+    /**
+     * Creates a new Storage instance with the specified file path.
+     *
+     * @param filePath the path to the file where tasks will be stored
+     */
     public Storage(String filePath) {
         this.filePath = filePath;
         int lastSlash = filePath.lastIndexOf('/');
@@ -30,6 +36,13 @@ public class Storage {
         }
     }
 
+    /**
+     * Loads tasks from the storage file.
+     * Creates the directory and file if they don't exist.
+     * Handles corrupted or invalid task data gracefully by skipping them.
+     *
+     * @return a list of tasks loaded from the file, or empty list if file doesn't exist
+     */
     public ArrayList<Task> load() {
         ArrayList<Task> tasks = new ArrayList<>();
 
@@ -62,6 +75,12 @@ public class Storage {
         return tasks;
     }
 
+    /**
+     * Saves the provided list of tasks to the storage file.
+     * Creates the directory if it doesn't exist.
+     *
+     * @param tasks the list of tasks to save
+     */
     public void save(ArrayList<Task> tasks) {
         try {
             File dataDir = new File(directoryPath);
@@ -83,6 +102,13 @@ public class Storage {
         }
     }
 
+    /**
+     * Parses a single line from the storage file into a Task object.
+     * Handles different task types and validates date/time formats.
+     *
+     * @param line the line from the file to parse
+     * @return the parsed Task object, or null if parsing fails
+     */
     private Task parseTaskFromFile(String line) {
         try {
             String[] parts = line.split(" \\| ");
@@ -135,6 +161,12 @@ public class Storage {
         }
     }
 
+    /**
+     * Formats a Task object into a string suitable for file storage.
+     *
+     * @param task the task to format
+     * @return the formatted string for file storage
+     */
     private String formatTaskForFile(Task task) {
         String isDone = task.isDone() ? "1" : "0";
         String type = task.getType().getSymbol();
