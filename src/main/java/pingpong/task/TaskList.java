@@ -69,6 +69,21 @@ public class TaskList {
     }
 
     /**
+     * Marks multiple tasks as completed using varargs.
+     *
+     * @param indices the 0-based indices of tasks to mark
+     * @return a list of marked tasks
+     * @throws PingpongException if any index is invalid
+     */
+    public ArrayList<Task> markTasks(int... indices) throws PingpongException {
+        ArrayList<Task> markedTasks = new ArrayList<>();
+        for (int index : indices) {
+            markedTasks.add(markTask(index));
+        }
+        return markedTasks;
+    }
+
+    /**
      * Unmarks a task (marks as not completed) at the specified index.
      *
      * @param index the 0-based index of the task to unmark
@@ -82,6 +97,21 @@ public class TaskList {
         Task task = tasks.get(index);
         task.markAsUndone();
         return task;
+    }
+
+    /**
+     * Unmarks multiple tasks using varargs.
+     *
+     * @param indices the 0-based indices of tasks to unmark
+     * @return a list of unmarked tasks
+     * @throws PingpongException if any index is invalid
+     */
+    public ArrayList<Task> unmarkTasks(int... indices) throws PingpongException {
+        ArrayList<Task> unmarkedTasks = new ArrayList<>();
+        for (int index : indices) {
+            unmarkedTasks.add(unmarkTask(index));
+        }
+        return unmarkedTasks;
     }
 
     /**
@@ -126,6 +156,21 @@ public class TaskList {
         Task task = new Todo(description);
         addTask(task);
         return task;
+    }
+
+    /**
+     * Creates and adds multiple Todo tasks to the task list using varargs.
+     *
+     * @param descriptions the descriptions of the todo tasks
+     * @return a list of created Todo tasks
+     */
+    public ArrayList<Task> addTodos(String... descriptions) {
+        ArrayList<Task> createdTasks = new ArrayList<>();
+        for (String description : descriptions) {
+            Task task = addTodo(description);
+            createdTasks.add(task);
+        }
+        return createdTasks;
     }
 
     /**
@@ -205,6 +250,30 @@ public class TaskList {
         for (Task task : tasks) {
             if (task.getDescription().toLowerCase().contains(keywordLower)) {
                 matchingTasks.add(task);
+            }
+        }
+        return matchingTasks;
+    }
+
+    /**
+     * Finds all tasks that contain any of the specified keywords in their description using varargs.
+     * The search is case-insensitive.
+     *
+     * @param keywords the keywords to search for in task descriptions
+     * @return a list of tasks whose descriptions contain any of the keywords
+     */
+    public ArrayList<Task> findTasksByKeywords(String... keywords) {
+        ArrayList<Task> matchingTasks = new ArrayList<>();
+
+        for (Task task : tasks) {
+            String descriptionLower = task.getDescription().toLowerCase();
+            for (String keyword : keywords) {
+                if (descriptionLower.contains(keyword.toLowerCase())) {
+                    if (!matchingTasks.contains(task)) {
+                        matchingTasks.add(task);
+                    }
+                    break; // Found a match, no need to check other keywords for this task
+                }
             }
         }
         return matchingTasks;

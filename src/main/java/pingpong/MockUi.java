@@ -27,10 +27,37 @@ public class MockUi extends Ui {
     }
 
     @Override
+    public void showErrors(String... messages) {
+        for (String message : messages) {
+            output.append(" OOPS!!! ").append(message).append("\n");
+        }
+    }
+
+    @Override
+    public void showMessages(String... messages) {
+        for (String message : messages) {
+            output.append(" ").append(message).append("\n");
+        }
+    }
+
+    @Override
     public void showTaskAdded(Task task, int totalTasks) {
         output.append(" Got it. I've added this task:\n")
                 .append("   ").append(task).append("\n")
                 .append(" Now you have ").append(totalTasks).append(" tasks in the list.");
+    }
+
+    @Override
+    public void showTasksAdded(ArrayList<Task> tasks, int totalTasks) {
+        if (tasks.size() == 1) {
+            showTaskAdded(tasks.get(0), totalTasks);
+        } else {
+            output.append(" Got it. I've added these ").append(tasks.size()).append(" tasks:\n");
+            for (int i = 0; i < tasks.size(); i++) {
+                output.append("   ").append(i + 1).append(". ").append(tasks.get(i)).append("\n");
+            }
+            output.append(" Now you have ").append(totalTasks).append(" tasks in the list.");
+        }
     }
 
     @Override
@@ -48,9 +75,33 @@ public class MockUi extends Ui {
     }
 
     @Override
+    public void showTasksMarked(Task... tasks) {
+        if (tasks.length == 1) {
+            showTaskMarked(tasks[0]);
+        } else {
+            output.append(" Nice! I've marked these ").append(tasks.length).append(" tasks as done:\n");
+            for (int i = 0; i < tasks.length; i++) {
+                output.append("  ").append(i + 1).append(". ").append(tasks[i]).append("\n");
+            }
+        }
+    }
+
+    @Override
     public void showTaskUnmarked(Task task) {
         output.append(" OK, I've marked this task as not done yet:\n")
                 .append("  ").append(task);
+    }
+
+    @Override
+    public void showTasksUnmarked(Task... tasks) {
+        if (tasks.length == 1) {
+            showTaskUnmarked(tasks[0]);
+        } else {
+            output.append(" OK, I've marked these ").append(tasks.length).append(" tasks as not done yet:\n");
+            for (int i = 0; i < tasks.length; i++) {
+                output.append("  ").append(i + 1).append(". ").append(tasks[i]).append("\n");
+            }
+        }
     }
 
     @Override
@@ -61,11 +112,43 @@ public class MockUi extends Ui {
     }
 
     @Override
+    public void showTasksDeleted(ArrayList<Task> tasks, int totalTasks) {
+        if (tasks.size() == 1) {
+            showTaskDeleted(tasks.get(0), totalTasks);
+        } else {
+            output.append(" Noted. I've removed these ").append(tasks.size()).append(" tasks:\n");
+            for (int i = 0; i < tasks.size(); i++) {
+                output.append("   ").append(i + 1).append(". ").append(tasks.get(i)).append("\n");
+            }
+            output.append(" Now you have ").append(totalTasks).append(" tasks in the list.");
+        }
+    }
+
+    @Override
     public void showFoundTasksByKeyword(ArrayList<Task> matchingTasks, String keyword) {
         if (matchingTasks.isEmpty()) {
             output.append(" No matching tasks found.");
         } else {
             output.append(" Here are the matching tasks in your list:\n");
+            for (int i = 0; i < matchingTasks.size(); i++) {
+                output.append(" ").append(i + 1).append(".").append(matchingTasks.get(i)).append("\n");
+            }
+        }
+    }
+
+    @Override
+    public void showFoundTasksByKeywords(ArrayList<Task> matchingTasks, String... keywords) {
+        if (matchingTasks.isEmpty()) {
+            output.append(" No matching tasks found for any of the keywords.");
+        } else {
+            output.append(" Here are the matching tasks for keywords: ");
+            for (int i = 0; i < keywords.length; i++) {
+                output.append(keywords[i]);
+                if (i < keywords.length - 1) {
+                    output.append(", ");
+                }
+            }
+            output.append("\n");
             for (int i = 0; i < matchingTasks.size(); i++) {
                 output.append(" ").append(i + 1).append(".").append(matchingTasks.get(i)).append("\n");
             }

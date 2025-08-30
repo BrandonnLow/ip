@@ -4,18 +4,21 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 
 import pingpong.PingpongException;
 
 /**
  * Handles parsing of user commands and returns appropriate Command objects.
  * This class contains the main parsing logic for all supported commands in the Pingpong application.
+ * Now supports varargs for batch operations on multiple tasks.
  */
 public class Parser {
 
     /**
      * Parses user input and returns the appropriate Command object for execution.
-     * Supports commands: list, mark, unmark, todo, deadline, event, delete, find.
+     * Supports commands: list, mark, unmark, todo, deadline, event, delete, find, addmultiple.
+     * Also supports batch operations with multiple task numbers.
      *
      * @param input the raw user input string
      * @return the Command object corresponding to the user input
@@ -28,9 +31,13 @@ public class Parser {
 
         if (input.equals("list")) {
             return new ListCommand();
-        } else if (input.equals("mark") || input.equals("mark ") || input.startsWith("mark ")) {
+        } else if (input.equals("mark") || input.equals("mark ")) {
+            throw new PingpongException("Please specify which task(s) to mark.");
+        } else if (input.startsWith("mark ")) {
             return parseMarkCommand(input);
-        } else if (input.equals("unmark") || input.equals("unmark ") || input.startsWith("unmark ")) {
+        } else if (input.equals("unmark") || input.equals("unmark ")) {
+            throw new PingpongException("Please specify which task(s) to unmark.");
+        } else if (input.startsWith("unmark ")) {
             return parseUnmarkCommand(input);
         } else if (input.equals("todo") || input.equals("todo ")) {
             throw new PingpongException("The description of a todo cannot be empty.");
@@ -44,62 +51,167 @@ public class Parser {
             throw new PingpongException("The description of an event cannot be empty.");
         } else if (input.startsWith("event ")) {
             return parseEventCommand(input);
-        } else if (input.equals("delete") || input.equals("delete ") || input.startsWith("delete ")) {
+        } else if (input.equals("delete") || input.equals("delete ")) {
+            throw new PingpongException("Please specify which task(s) to delete.");
+        } else if (input.startsWith("delete ")) {
             return parseDeleteCommand(input);
         } else if (input.equals("find") || input.equals("find ")) {
             throw new PingpongException("Please specify a keyword or date (yyyy-MM-dd) to search for.");
         } else if (input.startsWith("find ")) {
             return parseFindCommand(input);
+        } else if (input.equals("addmultiple") || input.equals("addmultiple ")) {
+            throw new PingpongException("Please specify todo descriptions separated by semicolons.");
+        } else if (input.startsWith("addmultiple ")) {
+            return parseAddMultipleCommand(input);
         } else {
             throw new PingpongException("I'm sorry, but I don't know what that means :-(");
         }
     }
 
     /**
-     * Parses a mark command to extract the task number.
-     * Expected format: "mark task_number"
+     * Parses a mark command to extract task numbers (supports both single and multiple).
+     * Expected format: "mark task_number" or "mark task_number1 task_number2 ..."
      *
      * @param input the mark command string
-     * @return a MarkCommand with the specified task number
-     * @throws PingpongException if the task number is missing or invalid
+     * @return a MarkCommand or MarkMultipleCommand depending on number of tasks
+     * @throws PingpongException if task numbers are missing or invalid
      */
     private static Command parseMarkCommand(String input) throws PingpongException {
-        String numberStr = "";
-        if (input.length() > 4) {
-            numberStr = input.substring(4).trim();
+        String numbersStr = input.substring(4).trim();
+        if (numbersStr.isEmpty()) {
+            throw new PingpongException("Please specify which task(s) to mark.");
         }
-        if (numberStr.isEmpty()) {
-            throw new PingpongException("Please specify which task to mark.");
-        }
-        try {
-            int taskNum = Integer.parseInt(numberStr);
-            return new MarkCommand(taskNum);
-        } catch (NumberFormatException e) {
-            throw new PingpongException("Please provide a valid task number.");
+
+        String[] numberParts = numbersStr.split("\\s+");
+
+        if (numberParts.length == 1) {
+            // Single task - use original MarkCommand
+            try {
+                int taskNum = Integer.parseInt(numberParts[0]);
+                return new MarkCommand(taskNum);
+            } catch (NumberFormatException e) {
+                throw new PingpongException("Please provide valid task number(s).");
+            }
+        } else {
+            // Multiple tasks - use new MarkMultipleCommand with varargs
+            int[] taskNumbers = parseTaskNumbers(numberParts);
+            return new MarkMultipleCommand(taskNumbers);
         }
     }
 
     /**
-     * Parses an unmark command to extract the task number.
-     * Expected format: "unmark task_number"
+     * Parses an unmark command to extract task numbers (supports both single and multiple).
+     * Expected format: "unmark task_number" or "unmark task_number1 task_number2 ..."
      *
      * @param input the unmark command string
-     * @return an UnmarkCommand with the specified task number
-     * @throws PingpongException if the task number is missing or invalid
+     * @return an UnmarkCommand or UnmarkMultipleCommand depending on number of tasks
+     * @throws PingpongException if task numbers are missing or invalid
      */
     private static Command parseUnmarkCommand(String input) throws PingpongException {
-        String numberStr = "";
-        if (input.length() > 6) {
-            numberStr = input.substring(6).trim();
+        String numbersStr = input.substring(6).trim();
+        if (numbersStr.isEmpty()) {
+            throw new PingpongException("Please specify which task(s) to unmark.");
         }
-        if (numberStr.isEmpty()) {
-            throw new PingpongException("Please specify which task to unmark.");
+
+        String[] numberParts = numbersStr.split("\\s+");
+
+        if (numberParts.length == 1) {
+            // Single task - use original UnmarkCommand
+            try {
+                int taskNum = Integer.parseInt(numberParts[0]);
+                return new UnmarkCommand(taskNum);
+            } catch (NumberFormatException e) {
+                throw new PingpongException("Please provide valid task number(s).");
+            }
+        } else {
+            // Multiple tasks - use new UnmarkMultipleCommand with varargs
+            int[] taskNumbers = parseTaskNumbers(numberParts);
+            return new UnmarkMultipleCommand(taskNumbers);
         }
+    }
+
+    /**
+     * Parses a delete command to extract task numbers (supports both single and multiple).
+     * Expected format: "delete task_number" or "delete task_number1 task_number2 ..."
+     *
+     * @param input the delete command string
+     * @return a DeleteCommand or DeleteMultipleCommand depending on number of tasks
+     * @throws PingpongException if task numbers are missing or invalid
+     */
+    private static Command parseDeleteCommand(String input) throws PingpongException {
+        String numbersStr = input.substring(6).trim();
+        if (numbersStr.isEmpty()) {
+            throw new PingpongException("Please specify which task(s) to delete.");
+        }
+
+        String[] numberParts = numbersStr.split("\\s+");
+
+        if (numberParts.length == 1) {
+            // Single task - use original DeleteCommand
+            try {
+                int taskNum = Integer.parseInt(numberParts[0]);
+                return new DeleteCommand(taskNum);
+            } catch (NumberFormatException e) {
+                throw new PingpongException("Please provide valid task number(s).");
+            }
+        } else {
+            // Multiple tasks - use new DeleteMultipleCommand with varargs
+            int[] taskNumbers = parseTaskNumbers(numberParts);
+            return new DeleteMultipleCommand(taskNumbers);
+        }
+    }
+
+    /**
+     * Parses an addmultiple command to extract multiple todo descriptions.
+     * Expected format: "addmultiple description1; description2; description3"
+     *
+     * @param input the addmultiple command string
+     * @return an AddMultipleCommand with the specified descriptions
+     * @throws PingpongException if descriptions are missing or invalid
+     */
+    private static Command parseAddMultipleCommand(String input) throws PingpongException {
+        String descriptionsStr = input.substring(11).trim();
+        if (descriptionsStr.isEmpty()) {
+            throw new PingpongException("Please specify todo descriptions separated by semicolons.");
+        }
+
+        String[] descriptions = descriptionsStr.split(";");
+        ArrayList<String> validDescriptions = new ArrayList<>();
+
+        for (String desc : descriptions) {
+            String trimmed = desc.trim();
+            if (!trimmed.isEmpty()) {
+                validDescriptions.add(trimmed);
+            }
+        }
+
+        if (validDescriptions.isEmpty()) {
+            throw new PingpongException("Please provide at least one valid todo description.");
+        }
+
+        return new AddMultipleCommand(validDescriptions.toArray(new String[0]));
+    }
+
+    /**
+     * Helper method to parse multiple task numbers from string array using varargs concept.
+     *
+     * @param numberParts array of string representations of task numbers
+     * @return array of parsed task numbers
+     * @throws PingpongException if any task number is invalid
+     */
+    private static int[] parseTaskNumbers(String... numberParts) throws PingpongException {
+        int[] taskNumbers = new int[numberParts.length];
+
         try {
-            int taskNum = Integer.parseInt(numberStr);
-            return new UnmarkCommand(taskNum);
+            for (int i = 0; i < numberParts.length; i++) {
+                taskNumbers[i] = Integer.parseInt(numberParts[i]);
+                if (taskNumbers[i] <= 0) {
+                    throw new PingpongException("Task numbers must be positive integers.");
+                }
+            }
+            return taskNumbers;
         } catch (NumberFormatException e) {
-            throw new PingpongException("Please provide a valid task number.");
+            throw new PingpongException("Please provide valid task number(s).");
         }
     }
 
@@ -185,36 +297,12 @@ public class Parser {
     }
 
     /**
-     * Parses a delete command to extract the task number.
-     * Expected format: "delete task_number"
-     *
-     * @param input the delete command string
-     * @return a DeleteCommand with the specified task number
-     * @throws PingpongException if the task number is missing or invalid
-     */
-    private static Command parseDeleteCommand(String input) throws PingpongException {
-        String numberStr = "";
-        if (input.length() > 6) {
-            numberStr = input.substring(6).trim();
-        }
-        if (numberStr.isEmpty()) {
-            throw new PingpongException("Please specify which task to delete.");
-        }
-        try {
-            int taskNum = Integer.parseInt(numberStr);
-            return new DeleteCommand(taskNum);
-        } catch (NumberFormatException e) {
-            throw new PingpongException("Please provide a valid task number.");
-        }
-    }
-
-    /**
-     * Parses a find command to extract the target date.
-     * Expected format: "find yyyy-MM-dd"
+     * Parses a find command to extract the target date or keywords.
+     * Expected format: "find yyyy-MM-dd" or "find keyword"
      *
      * @param input the find command string
-     * @return a FindCommand with the specified date
-     * @throws PingpongException if the date is missing or in invalid format
+     * @return a FindCommand with the specified date or keyword
+     * @throws PingpongException if the date/keyword is missing or in invalid format
      */
     private static Command parseFindCommand(String input) throws PingpongException {
         String searchTerm = input.substring(5).trim();

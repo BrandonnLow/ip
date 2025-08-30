@@ -1,12 +1,13 @@
 package pingpong.task;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import pingpong.PingpongException;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import pingpong.PingpongException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -196,5 +197,287 @@ public class TaskListTest {
         assertEquals("Read book", foundTasks.get(0).getDescription());
         assertEquals("Return book", foundTasks.get(1).getDescription());
         assertEquals("Book club meeting", foundTasks.get(2).getDescription());
+    }
+
+    @Test
+    public void addTodos_multipleTasks_success() {
+        ArrayList<Task> addedTasks = taskList.addTodos("Buy groceries", "Read book", "Submit assignment");
+
+        assertEquals(3, taskList.size());
+        assertEquals(3, addedTasks.size());
+        assertEquals("Buy groceries", addedTasks.get(0).getDescription());
+        assertEquals("Read book", addedTasks.get(1).getDescription());
+        assertEquals("Submit assignment", addedTasks.get(2).getDescription());
+
+        for (Task task : addedTasks) {
+            assertEquals(TaskType.TODO, task.getType());
+            assertFalse(task.isDone());
+        }
+    }
+
+    @Test
+    public void addTodos_singleTask_success() {
+        ArrayList<Task> addedTasks = taskList.addTodos("Single task");
+
+        assertEquals(1, taskList.size());
+        assertEquals(1, addedTasks.size());
+        assertEquals("Single task", addedTasks.get(0).getDescription());
+    }
+
+    @Test
+    public void addTodos_emptyVarargs_success() {
+        ArrayList<Task> addedTasks = taskList.addTodos();
+
+        assertEquals(0, taskList.size());
+        assertEquals(0, addedTasks.size());
+    }
+
+    @Test
+    public void markTasks_multipleTasks_success() throws PingpongException {
+        taskList.addTodo("Task 1");
+        taskList.addTodo("Task 2");
+        taskList.addTodo("Task 3");
+        taskList.addTodo("Task 4");
+
+        ArrayList<Task> markedTasks = taskList.markTasks(0, 2, 3);
+
+        assertEquals(3, markedTasks.size());
+        assertTrue(taskList.getTask(0).isDone());
+        assertFalse(taskList.getTask(1).isDone());
+        assertTrue(taskList.getTask(2).isDone());
+        assertTrue(taskList.getTask(3).isDone());
+    }
+
+    @Test
+    public void markTasks_singleTask_success() throws PingpongException {
+        taskList.addTodo("Task to mark");
+
+        ArrayList<Task> markedTasks = taskList.markTasks(0);
+
+        assertEquals(1, markedTasks.size());
+        assertTrue(markedTasks.get(0).isDone());
+        assertTrue(taskList.getTask(0).isDone());
+    }
+
+    @Test
+    public void markTasks_invalidIndex_throwsException() {
+        taskList.addTodo("Only task");
+
+        assertThrows(PingpongException.class, () -> taskList.markTasks(0, 1));
+        assertThrows(PingpongException.class, () -> taskList.markTasks(-1));
+    }
+
+    @Test
+    public void unmarkTasks_multipleTasks_success() throws PingpongException {
+        taskList.addTodo("Task 1");
+        taskList.addTodo("Task 2");
+        taskList.addTodo("Task 3");
+
+        taskList.markTasks(0, 1, 2);
+
+        ArrayList<Task> unmarkedTasks = taskList.unmarkTasks(0, 2);
+
+        assertEquals(2, unmarkedTasks.size());
+        assertFalse(taskList.getTask(0).isDone());
+        assertTrue(taskList.getTask(1).isDone());
+        assertFalse(taskList.getTask(2).isDone());
+    }
+
+    @Test
+    public void unmarkTasks_singleTask_success() throws PingpongException {
+        taskList.addTodo("Task to unmark");
+        taskList.markTask(0);
+
+        ArrayList<Task> unmarkedTasks = taskList.unmarkTasks(0);
+
+        assertEquals(1, unmarkedTasks.size());
+        assertFalse(unmarkedTasks.get(0).isDone());
+        assertFalse(taskList.getTask(0).isDone());
+    }
+
+    @Test
+    public void unmarkTasks_invalidIndex_throwsException() {
+        taskList.addTodo("Only task");
+
+        assertThrows(PingpongException.class, () -> taskList.unmarkTasks(0, 1));
+        assertThrows(PingpongException.class, () -> taskList.unmarkTasks(-1));
+    }
+
+    @Test
+    public void findTasksByKeywords_multipleKeywords_returnsMatchingTasks() {
+        taskList.addTodo("Buy book for reading");
+        taskList.addTodo("Submit assignment");
+        taskList.addTodo("Read newspaper");
+        taskList.addTodo("Write essay");
+
+        ArrayList<Task> foundTasks = taskList.findTasksByKeywords("book", "assignment");
+
+        assertEquals(2, foundTasks.size());
+        assertEquals("Buy book for reading", foundTasks.get(0).getDescription());
+        assertEquals("Submit assignment", foundTasks.get(1).getDescription());
+    }
+
+    @Test
+    public void findTasksByKeywords_singleKeyword_returnsMatchingTasks() {
+        taskList.addTodo("Buy book");
+        taskList.addTodo("Read book");
+        taskList.addTodo("Submit assignment");
+
+        ArrayList<Task> foundTasks = taskList.findTasksByKeywords("book");
+
+        assertEquals(2, foundTasks.size());
+        assertEquals("Buy book", foundTasks.get(0).getDescription());
+        assertEquals("Read book", foundTasks.get(1).getDescription());
+    }
+
+    @Test
+    public void findTasksByKeywords_overlappingMatches_noDuplicates() {
+        taskList.addTodo("Buy book for assignment");
+        taskList.addTodo("Read another book");
+        taskList.addTodo("Submit assignment");
+
+        ArrayList<Task> foundTasks = taskList.findTasksByKeywords("book", "assignment");
+
+        assertEquals(3, foundTasks.size());
+        assertEquals("Buy book for assignment", foundTasks.get(0).getDescription());
+        assertEquals("Read another book", foundTasks.get(1).getDescription());
+        assertEquals("Submit assignment", foundTasks.get(2).getDescription());
+    }
+
+    @Test
+    public void findTasksByKeywords_noMatches_returnsEmpty() {
+        taskList.addTodo("Buy groceries");
+        taskList.addTodo("Submit assignment");
+
+        ArrayList<Task> foundTasks = taskList.findTasksByKeywords("book", "reading");
+
+        assertTrue(foundTasks.isEmpty());
+    }
+
+    @Test
+    public void findTasksByKeywords_caseInsensitive_returnsMatchingTasks() {
+        taskList.addTodo("Buy BOOK");
+        taskList.addTodo("read Book");
+        taskList.addTodo("SUBMIT assignment");
+
+        ArrayList<Task> foundTasks = taskList.findTasksByKeywords("book", "ASSIGNMENT");
+
+        assertEquals(3, foundTasks.size());
+    }
+
+    @Test
+    public void findTasksByKeywords_emptyKeywords_returnsEmpty() {
+        taskList.addTodo("Buy groceries");
+        taskList.addTodo("Submit assignment");
+
+        ArrayList<Task> foundTasks = taskList.findTasksByKeywords();
+
+        assertTrue(foundTasks.isEmpty());
+    }
+
+    @Test
+    public void markTasks_emptyIndices_returnsEmpty() throws PingpongException {
+        taskList.addTodo("Task 1");
+        taskList.addTodo("Task 2");
+
+        ArrayList<Task> markedTasks = taskList.markTasks();
+
+        assertEquals(0, markedTasks.size());
+        assertFalse(taskList.getTask(0).isDone());
+        assertFalse(taskList.getTask(1).isDone());
+    }
+
+    @Test
+    public void unmarkTasks_emptyIndices_returnsEmpty() throws PingpongException {
+        taskList.addTodo("Task 1");
+        taskList.markTask(0);
+
+        ArrayList<Task> unmarkedTasks = taskList.unmarkTasks();
+
+        assertEquals(0, unmarkedTasks.size());
+        assertTrue(taskList.getTask(0).isDone());
+    }
+
+    @Test
+    public void markTasks_duplicateIndices_marksTaskOnlyOnce() throws PingpongException {
+        taskList.addTodo("Task 1");
+        taskList.addTodo("Task 2");
+
+        ArrayList<Task> markedTasks = taskList.markTasks(0, 0, 1);
+
+        assertEquals(3, markedTasks.size());
+        assertTrue(taskList.getTask(0).isDone());
+        assertTrue(taskList.getTask(1).isDone());
+    }
+
+    @Test
+    public void addTodos_largeNumberOfTasks_success() {
+        String[] descriptions = {
+                "Task 1", "Task 2", "Task 3", "Task 4", "Task 5",
+                "Task 6", "Task 7", "Task 8", "Task 9", "Task 10"
+        };
+
+        ArrayList<Task> addedTasks = taskList.addTodos(descriptions);
+
+        assertEquals(10, taskList.size());
+        assertEquals(10, addedTasks.size());
+
+        for (int i = 0; i < descriptions.length; i++) {
+            assertEquals(descriptions[i], addedTasks.get(i).getDescription());
+            assertEquals(TaskType.TODO, addedTasks.get(i).getType());
+        }
+    }
+
+    @Test
+    public void markTasks_partiallyMarkedTasks_worksCorrectly() throws PingpongException {
+        taskList.addTodo("Task 1");
+        taskList.addTodo("Task 2");
+        taskList.addTodo("Task 3");
+
+        taskList.markTask(0);
+
+        ArrayList<Task> markedTasks = taskList.markTasks(0, 1);
+
+        assertEquals(2, markedTasks.size());
+        assertTrue(taskList.getTask(0).isDone());
+        assertTrue(taskList.getTask(1).isDone());
+        assertFalse(taskList.getTask(2).isDone());
+    }
+
+    @Test
+    public void findTasksByKeywords_withDifferentTaskTypes_returnsAllMatching() {
+        taskList.addTodo("Read programming book");
+        LocalDate deadline = LocalDate.of(2024, 12, 25);
+        taskList.addDeadline("Submit programming assignment", deadline);
+        LocalDateTime start = LocalDateTime.of(2024, 12, 25, 10, 0);
+        LocalDateTime end = LocalDateTime.of(2024, 12, 25, 12, 0);
+        taskList.addEvent("Programming workshop", start, end);
+        taskList.addTodo("Buy groceries");
+
+        ArrayList<Task> foundTasks = taskList.findTasksByKeywords("programming", "book");
+
+        assertEquals(3, foundTasks.size());
+        assertEquals("Read programming book", foundTasks.get(0).getDescription());
+        assertEquals("Submit programming assignment", foundTasks.get(1).getDescription());
+        assertEquals("Programming workshop", foundTasks.get(2).getDescription());
+    }
+
+    @Test
+    public void operations_afterMultipleOperations_maintainCorrectState() throws PingpongException {
+        taskList.addTodos("Task 1", "Task 2", "Task 3", "Task 4");
+        assertEquals(4, taskList.size());
+
+        taskList.markTasks(0, 2);
+        assertTrue(taskList.getTask(0).isDone());
+        assertTrue(taskList.getTask(2).isDone());
+        assertFalse(taskList.getTask(1).isDone());
+        assertFalse(taskList.getTask(3).isDone());
+
+        taskList.unmarkTasks(0);
+        assertFalse(taskList.getTask(0).isDone());
+        assertTrue(taskList.getTask(2).isDone());
+
+        ArrayList<Task> foundTasks = taskList.findTasksByKeywords("Task");
+        assertEquals(4, foundTasks.size());
     }
 }
