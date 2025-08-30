@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'application'
+    id 'checkstyle'
     id 'com.github.johnrengelman.shadow' version '7.1.2'
 }
 
@@ -15,10 +16,8 @@ dependencies {
 
 test {
     useJUnitPlatform()
-
     testLogging {
         events "passed", "skipped", "failed"
-
         showExceptions true
         exceptionFormat "full"
         showCauses true
@@ -34,6 +33,11 @@ application {
 shadowJar {
     archiveBaseName = "pingpong"
     archiveClassifier = null
+}
+
+// Add CheckStyle configuration
+checkstyle {
+    toolVersion = '11.0.0'
 }
 
 run{

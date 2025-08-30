@@ -1,9 +1,9 @@
 package pingpong.command;
 
+import pingpong.PingpongException;
+import pingpong.storage.Storage;
 import pingpong.task.TaskList;
 import pingpong.ui.Ui;
-import pingpong.storage.Storage;
-import pingpong.PingpongException;
 
 /**
  * Represents an abstract command that can be executed by the Pingpong application.

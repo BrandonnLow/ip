@@ -1,9 +1,9 @@
 package pingpong.ui;
 
-import pingpong.task.Task;
-
 import java.util.ArrayList;
 import java.util.Scanner;
+
+import pingpong.task.Task;
 
 /**
  * Handles interactions with the user, including input/output operations.
@@ -136,6 +136,14 @@ public class Ui {
         }
     }
 
+    /**
+     * Displays the tasks found for a specific date.
+     * Shows either a "no tasks found" message if the list is empty,
+     * or displays all matching tasks in a numbered list.
+     *
+     * @param matchingTasks the list of tasks found for the date
+     * @param dateStr the formatted date string for display
+     */
     public void showFoundTasksByDate(ArrayList<Task> matchingTasks, String dateStr) {
         if (matchingTasks.isEmpty()) {
             System.out.println(" No tasks found on " + dateStr);

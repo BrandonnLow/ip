@@ -1,20 +1,19 @@
 package pingpong;
 
-import pingpong.task.TaskList;
-import pingpong.storage.Storage;
-import pingpong.ui.Ui;
-import pingpong.command.Parser;
 import pingpong.command.Command;
+import pingpong.command.Parser;
+import pingpong.storage.Storage;
+import pingpong.task.TaskList;
+import pingpong.ui.Ui;
 
 /**
  * Main class for the Pingpong task management application.
  * Coordinates the interaction between the UI, task list, storage, and command parsing.
  */
 public class Pingpong {
+    private static Ui ui;
     private TaskList tasks;
     private Storage storage;
-    private static Ui ui;
-
     /**
      * Creates a new Pingpong application instance with the specified storage file path.
      * Initializes the UI, storage, and loads existing tasks from file.
