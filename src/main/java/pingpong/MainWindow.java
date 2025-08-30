@@ -55,7 +55,8 @@ public class MainWindow extends AnchorPane {
     private void handleUserInput() {
         String input = userInput.getText();
         String response = getPingpongResponse(input);
-        dialogContainer.getChildren().addAll(
+
+        addDialogBoxes(
                 DialogBox.getUserDialog(input, userImage),
                 DialogBox.getPingpongDialog(response, pingpongImage)
         );
@@ -79,5 +80,12 @@ public class MainWindow extends AnchorPane {
         } catch (PingpongException e) {
             return " OOPS!!! " + e.getMessage();
         }
+    }
+
+    /**
+     * Adds multiple dialog boxes to the dialog container using varargs.
+     */
+    private void addDialogBoxes(DialogBox... dialogBoxes) {
+        dialogContainer.getChildren().addAll(dialogBoxes);
     }
 }

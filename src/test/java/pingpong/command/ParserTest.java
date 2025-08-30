@@ -1,6 +1,7 @@
 package pingpong.command;
 
 import org.junit.jupiter.api.Test;
+
 import pingpong.PingpongException;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -59,16 +60,20 @@ public class ParserTest {
     @Test
     public void parse_eventInvalidFormat_throwsException() {
         // Missing /from
-        assertThrows(PingpongException.class, () -> Parser.parse("event Team meeting 2024-12-25 1400 /to 2024-12-25 1600"));
+        assertThrows(PingpongException.class, () -> Parser.parse("event Team meeting "
+                + "2024-12-25 1400 /to 2024-12-25 1600"));
 
         // Missing /to
-        assertThrows(PingpongException.class, () -> Parser.parse("event Team meeting /from 2024-12-25 1400 2024-12-25 1600"));
+        assertThrows(PingpongException.class, () -> Parser.parse("event Team meeting "
+                + "/from 2024-12-25 1400 2024-12-25 1600"));
 
         // Invalid date format
-        assertThrows(PingpongException.class, () -> Parser.parse("event Team meeting /from 25-12-2024 1400 /to 25-12-2024 1600"));
+        assertThrows(PingpongException.class, () -> Parser.parse("event Team meeting "
+                + "/from 25-12-2024 1400 /to 25-12-2024 1600"));
 
         // Start time after end time
-        assertThrows(PingpongException.class, () -> Parser.parse("event Team meeting /from 2024-12-25 1600 /to 2024-12-25 1400"));
+        assertThrows(PingpongException.class, () -> Parser.parse("event Team meeting "
+                + "/from 2024-12-25 1600 /to 2024-12-25 1400"));
     }
 
     @Test
@@ -159,5 +164,140 @@ public class ParserTest {
         // Test date only format (should default to start of day)
         Command command3 = Parser.parse("event Meeting /from 2024-12-25 /to 2024-12-26");
         assertTrue(command3 instanceof AddEventCommand);
+    }
+
+    @Test
+    public void parse_addMultipleCommand_success() throws PingpongException {
+        Command command = Parser.parse("addmultiple Buy groceries; Read book; Submit assignment");
+
+        assertTrue(command instanceof AddMultipleCommand);
+    }
+
+    @Test
+    public void parse_addMultipleCommandSingleTask_success() throws PingpongException {
+        Command command = Parser.parse("addmultiple Buy groceries");
+
+        assertTrue(command instanceof AddMultipleCommand);
+    }
+
+    @Test
+    public void parse_addMultipleCommandWithSpaces_success() throws PingpongException {
+        Command command = Parser.parse("addmultiple  Buy groceries ; Read book ; Submit assignment  ");
+
+        assertTrue(command instanceof AddMultipleCommand);
+    }
+
+    @Test
+    public void parse_addMultipleEmpty_throwsException() {
+        assertThrows(PingpongException.class, () -> Parser.parse("addmultiple"));
+        assertThrows(PingpongException.class, () -> Parser.parse("addmultiple "));
+    }
+
+    @Test
+    public void parse_addMultipleOnlySemicolons_throwsException() {
+        assertThrows(PingpongException.class, () -> Parser.parse("addmultiple ;;;"));
+        assertThrows(PingpongException.class, () -> Parser.parse("addmultiple ; ; ;"));
+    }
+
+    @Test
+    public void parse_markMultipleCommand_success() throws PingpongException {
+        Command command = Parser.parse("mark 1 2 3");
+
+        assertTrue(command instanceof MarkMultipleCommand);
+    }
+
+    @Test
+    public void parse_markMultipleCommandTwoTasks_success() throws PingpongException {
+        Command command = Parser.parse("mark 1 5");
+
+        assertTrue(command instanceof MarkMultipleCommand);
+    }
+
+    @Test
+    public void parse_markMultipleInvalidNumbers_throwsException() {
+        assertThrows(PingpongException.class, () -> Parser.parse("mark 1 abc 3"));
+        assertThrows(PingpongException.class, () -> Parser.parse("mark 1 2 -1"));
+        assertThrows(PingpongException.class, () -> Parser.parse("mark 1 2 0"));
+    }
+
+    @Test
+    public void parse_unmarkMultipleCommand_success() throws PingpongException {
+        Command command = Parser.parse("unmark 1 2 3");
+
+        assertTrue(command instanceof UnmarkMultipleCommand);
+    }
+
+    @Test
+    public void parse_unmarkMultipleCommandTwoTasks_success() throws PingpongException {
+        Command command = Parser.parse("unmark 2 4");
+
+        assertTrue(command instanceof UnmarkMultipleCommand);
+    }
+
+    @Test
+    public void parse_unmarkMultipleInvalidNumbers_throwsException() {
+        assertThrows(PingpongException.class, () -> Parser.parse("unmark 1 xyz"));
+        assertThrows(PingpongException.class, () -> Parser.parse("unmark -5 2"));
+    }
+
+    @Test
+    public void parse_deleteMultipleCommand_success() throws PingpongException {
+        Command command = Parser.parse("delete 1 2 3");
+
+        assertTrue(command instanceof DeleteMultipleCommand);
+    }
+
+    @Test
+    public void parse_deleteMultipleCommandTwoTasks_success() throws PingpongException {
+        Command command = Parser.parse("delete 3 1");
+
+        assertTrue(command instanceof DeleteMultipleCommand);
+    }
+
+    @Test
+    public void parse_deleteMultipleInvalidNumbers_throwsException() {
+        assertThrows(PingpongException.class, () -> Parser.parse("delete 1 notanumber"));
+        assertThrows(PingpongException.class, () -> Parser.parse("delete 0 1"));
+    }
+
+    @Test
+    public void parse_markSingleVsMultiple_returnsCorrectCommandType() throws PingpongException {
+        Command singleCommand = Parser.parse("mark 1");
+        Command multipleCommand = Parser.parse("mark 1 2");
+
+        assertTrue(singleCommand instanceof MarkCommand);
+        assertTrue(multipleCommand instanceof MarkMultipleCommand);
+    }
+
+    @Test
+    public void parse_unmarkSingleVsMultiple_returnsCorrectCommandType() throws PingpongException {
+        Command singleCommand = Parser.parse("unmark 3");
+        Command multipleCommand = Parser.parse("unmark 1 3 5");
+
+        assertTrue(singleCommand instanceof UnmarkCommand);
+        assertTrue(multipleCommand instanceof UnmarkMultipleCommand);
+    }
+
+    @Test
+    public void parse_deleteSingleVsMultiple_returnsCorrectCommandType() throws PingpongException {
+        Command singleCommand = Parser.parse("delete 2");
+        Command multipleCommand = Parser.parse("delete 1 2 3 4");
+
+        assertTrue(singleCommand instanceof DeleteCommand);
+        assertTrue(multipleCommand instanceof DeleteMultipleCommand);
+    }
+
+    @Test
+    public void parse_addMultipleWithEmptyDescriptions_throwsException() {
+        assertThrows(PingpongException.class, () -> Parser.parse("addmultiple ; ; "));
+        assertThrows(PingpongException.class, () -> Parser.parse("addmultiple   ;   ;   "));
+    }
+
+    @Test
+    public void parse_addMultipleWithSomeEmptyDescriptions_filtersEmpty() throws PingpongException {
+        // Should work - empty descriptions should be filtered out
+        Command command = Parser.parse("addmultiple Buy groceries; ; Read book");
+
+        assertTrue(command instanceof AddMultipleCommand);
     }
 }
