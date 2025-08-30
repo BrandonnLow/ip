@@ -71,4 +71,18 @@ public class Pingpong {
         ui.showGoodbye();
         ui.close();
     }
+
+    /**
+     * Processes a single command using the provided UI without running the full interactive loop.
+     * Used by the GUI to get responses for user input.
+     *
+     * @param fullCommand the command to process
+     * @param ui the UI to use for output
+     * @throws PingpongException if an error occurs during command execution
+     */
+    public void processCommand(String fullCommand, Ui ui) throws PingpongException {
+        Command command = Parser.parse(fullCommand);
+        command.execute(tasks, ui, storage);
+    }
+
 }
