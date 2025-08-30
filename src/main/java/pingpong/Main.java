@@ -23,7 +23,11 @@ public class Main extends Application {
             Scene scene = new Scene(ap);
             stage.setScene(scene);
             stage.setTitle("Pingpong");
-            fxmlLoader.<MainWindow>getController().setPingpong(pingpong); // inject the Pingpong instance
+
+            stage.setMinHeight(220);
+            stage.setMinWidth(417);
+
+            fxmlLoader.<MainWindow>getController().setPingpong(pingpong);
             stage.show();
         } catch (IOException e) {
             e.printStackTrace();
