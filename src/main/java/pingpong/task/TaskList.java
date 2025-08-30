@@ -1,10 +1,10 @@
 package pingpong.task;
 
-import pingpong.PingpongException;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+
+import pingpong.PingpongException;
 
 /**
  * Contains the task list and operations to add/delete/modify tasks.
@@ -191,6 +191,13 @@ public class TaskList {
         return matchingTasks;
     }
 
+    /**
+     * Finds all tasks that contain the specified keyword in their description.
+     * The search is case-insensitive.
+     *
+     * @param keyword the keyword to search for in task descriptions
+     * @return a list of tasks whose descriptions contain the keyword
+     */
     public ArrayList<Task> findTasksByKeyword(String keyword) {
         ArrayList<Task> matchingTasks = new ArrayList<>();
         String keywordLower = keyword.toLowerCase();

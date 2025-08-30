@@ -79,6 +79,6 @@ public class Task {
      */
     @Override
     public String toString() {
-        return  "[" + type.getSymbol() + "][" + getStatus() + "] " + getDescription();
+        return "[" + type.getSymbol() + "][" + getStatus() + "] " + getDescription();
     }
 }

@@ -1,17 +1,20 @@
 package pingpong.storage;
 
-import pingpong.task.Task;
-import pingpong.task.Todo;
-import pingpong.task.Deadline;
-import pingpong.task.Event;
-
-import java.io.*;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Scanner;
+
+import pingpong.task.Deadline;
+import pingpong.task.Event;
+import pingpong.task.Task;
+import pingpong.task.Todo;
 
 /**
  * Handles loading and saving of tasks to/from file storage.
@@ -122,32 +125,35 @@ public class Storage {
 
             Task task = null;
             switch (type) {
-                case "T":
-                    task = new Todo(description);
-                    break;
-                case "D":
-                    if (parts.length >= 4) {
-                        try {
-                            LocalDate by = LocalDate.parse(parts[3].trim(), DateTimeFormatter.ISO_LOCAL_DATE);
-                            task = new Deadline(description, by);
-                        } catch (DateTimeParseException e) {
-                            System.out.println("Warning: Invalid date format in file for deadline: " + line);
-                            return null;
-                        }
+            case "T":
+                task = new Todo(description);
+                break;
+            case "D":
+                if (parts.length >= 4) {
+                    try {
+                        LocalDate by = LocalDate.parse(parts[3].trim(), DateTimeFormatter.ISO_LOCAL_DATE);
+                        task = new Deadline(description, by);
+                    } catch (DateTimeParseException e) {
+                        System.out.println("Warning: Invalid date format in file for deadline: " + line);
+                        return null;
                     }
-                    break;
-                case "E":
-                    if (parts.length >= 5) {
-                        try {
-                            LocalDateTime start = LocalDateTime.parse(parts[3].trim(), DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-                            LocalDateTime end = LocalDateTime.parse(parts[4].trim(), DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-                            task = new Event(description, start, end);
-                        } catch (DateTimeParseException e) {
-                            System.out.println("Warning: Invalid datetime format in file for event: " + line);
-                            return null;
-                        }
+                }
+                break;
+            case "E":
+                if (parts.length >= 5) {
+                    try {
+                        LocalDateTime start = LocalDateTime.parse(parts[3].trim(),
+                                DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+                        LocalDateTime end = LocalDateTime.parse(parts[4].trim(), DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+                        task = new Event(description, start, end);
+                    } catch (DateTimeParseException e) {
+                        System.out.println("Warning: Invalid datetime format in file for event: " + line);
+                        return null;
                     }
-                    break;
+                }
+                break;
+            default:
+                break;
             }
 
             if (task != null && isDone) {
@@ -173,17 +179,17 @@ public class Storage {
         String description = task.getDescription();
 
         switch (task.getType()) {
-            case TODO:
-                return String.format("%s | %s | %s", type, isDone, description);
-            case DEADLINE:
-                Deadline deadline = (Deadline) task;
-                return String.format("%s | %s | %s | %s", type, isDone, description, deadline.getByForFile());
-            case Event:
-                Event event = (Event) task;
-                return String.format("%s | %s | %s | %s | %s", type, isDone, description,
-                        event.getStartForFile(), event.getEndForFile());
-            default:
-                return String.format("%s | %s | %s", type, isDone, description);
+        case TODO:
+            return String.format("%s | %s | %s", type, isDone, description);
+        case DEADLINE:
+            Deadline deadline = (Deadline) task;
+            return String.format("%s | %s | %s | %s", type, isDone, description, deadline.getByForFile());
+        case Event:
+            Event event = (Event) task;
+            return String.format("%s | %s | %s | %s | %s", type, isDone, description,
+                    event.getStartForFile(), event.getEndForFile());
+        default:
+            return String.format("%s | %s | %s", type, isDone, description);
         }
     }
 }

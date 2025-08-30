@@ -1,10 +1,11 @@
 package pingpong.command;
 
-import pingpong.PingpongException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+
+import pingpong.PingpongException;
 
 /**
  * Handles parsing of user commands and returns appropriate Command objects.
@@ -56,7 +57,7 @@ public class Parser {
 
     /**
      * Parses a mark command to extract the task number.
-     * Expected format: "mark <task_number>"
+     * Expected format: "mark task_number"
      *
      * @param input the mark command string
      * @return a MarkCommand with the specified task number
@@ -80,7 +81,7 @@ public class Parser {
 
     /**
      * Parses an unmark command to extract the task number.
-     * Expected format: "unmark <task_number>"
+     * Expected format: "unmark task_number"
      *
      * @param input the unmark command string
      * @return an UnmarkCommand with the specified task number
@@ -104,7 +105,7 @@ public class Parser {
 
     /**
      * Parses a todo command to extract the task description.
-     * Expected format: "todo <description>"
+     * Expected format: "todo description"
      *
      * @param input the todo command string
      * @return an AddTodoCommand with the specified description
@@ -120,7 +121,7 @@ public class Parser {
 
     /**
      * Parses a deadline command to extract the description and deadline date.
-     * Expected format: "deadline <description> /by <yyyy-MM-dd>"
+     * Expected format: "deadline description /by yyyy-MM-dd"
      *
      * @param input the deadline command string
      * @return an AddDeadlineCommand with the specified description and date
@@ -145,7 +146,7 @@ public class Parser {
 
     /**
      * Parses an event command to extract the description, start time, and end time.
-     * Expected format: "event <description> /from <yyyy-MM-dd HHmm> /to <yyyy-MM-dd HHmm>"
+     * Expected format: "event description /from yyyy-MM-dd HHmm /to yyyy-MM-dd HHmm"
      *
      * @param input the event command string
      * @return an AddEventCommand with the specified description and time range
@@ -155,12 +156,14 @@ public class Parser {
         String remaining = input.substring(6);
         String[] fromParts = remaining.split(" /from ");
         if (fromParts.length != 2) {
-            throw new PingpongException("Please use format: event <description> /from <yyyy-MM-dd HHmm> /to <yyyy-MM-dd HHmm>");
+            throw new PingpongException("Please use format: event <description> "
+                    + "/from <yyyy-MM-dd HHmm> /to <yyyy-MM-dd HHmm>");
         }
         String description = fromParts[0].trim();
         String[] toParts = fromParts[1].split(" /to ");
         if (toParts.length != 2) {
-            throw new PingpongException("Please use format: event <description> /from <yyyy-MM-dd HHmm> /to <yyyy-MM-dd HHmm>");
+            throw new PingpongException("Please use format: event <description> "
+                    + "/from <yyyy-MM-dd HHmm> /to <yyyy-MM-dd HHmm>");
         }
         String fromStr = toParts[0].trim();
         String toStr = toParts[1].trim();
@@ -183,7 +186,7 @@ public class Parser {
 
     /**
      * Parses a delete command to extract the task number.
-     * Expected format: "delete <task_number>"
+     * Expected format: "delete task_number"
      *
      * @param input the delete command string
      * @return a DeleteCommand with the specified task number
@@ -207,7 +210,7 @@ public class Parser {
 
     /**
      * Parses a find command to extract the target date.
-     * Expected format: "find <yyyy-MM-dd>"
+     * Expected format: "find yyyy-MM-dd"
      *
      * @param input the find command string
      * @return a FindCommand with the specified date
@@ -251,18 +254,16 @@ public class Parser {
         try {
             if (dateTimeStr.matches("\\d{4}-\\d{2}-\\d{2} \\d{4}")) {
                 return LocalDateTime.parse(dateTimeStr, DateTimeFormatter.ofPattern("yyyy-MM-dd HHmm"));
-            }
-            else if (dateTimeStr.matches("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}")) {
+            } else if (dateTimeStr.matches("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}")) {
                 return LocalDateTime.parse(dateTimeStr, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
-            }
-            else if (dateTimeStr.matches("\\d{4}-\\d{2}-\\d{2}")) {
+            } else if (dateTimeStr.matches("\\d{4}-\\d{2}-\\d{2}")) {
                 return LocalDate.parse(dateTimeStr, DateTimeFormatter.ofPattern("yyyy-MM-dd")).atStartOfDay();
-            }
-            else {
+            } else {
                 throw new DateTimeParseException("Unsupported format", dateTimeStr, 0);
             }
         } catch (DateTimeParseException e) {
-            throw new PingpongException("Invalid datetime format. Please use formats like: 2019-12-02 1800, 2019-12-02 18:00, or 2019-12-02");
+            throw new PingpongException("Invalid datetime format."
+                    + "Please use formats like: 2019-12-02 1800, 2019-12-02 18:00, or 2019-12-02");
         }
     }
 }
