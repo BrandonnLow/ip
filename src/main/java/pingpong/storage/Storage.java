@@ -51,8 +51,14 @@ public class Storage {
      * @param filePath the path to the file where tasks will be stored
      */
     public Storage(String filePath) {
+        assert filePath != null : "File path should not be null";
+        assert !filePath.trim().isEmpty() : "File path should not be empty";
+
         this.filePath = filePath;
         this.directoryPath = extractDirectoryPath(filePath);
+
+        assert this.filePath != null : "File path should be set";
+        assert this.directoryPath != null : "Directory path should be set";
     }
 
     /**
@@ -75,12 +81,15 @@ public class Storage {
      */
     public ArrayList<Task> load() {
         ArrayList<Task> tasks = new ArrayList<>();
+        assert tasks != null : "Task list should be initialized";
 
         try {
             ensureDirectoryExists();
             File dataFile = new File(filePath);
+            assert dataFile != null : "Data file object should not be null";
 
             if (!dataFile.exists()) {
+                assert tasks.isEmpty() : "Task list should be empty when no file exists";
                 return tasks;
             }
 
@@ -89,6 +98,7 @@ public class Storage {
             System.out.println(LOAD_ERROR_PREFIX + e.getMessage());
         }
 
+        assert tasks != null : "Returned task list should not be null";
         return tasks;
     }
 
@@ -99,11 +109,14 @@ public class Storage {
      */
     private void ensureDirectoryExists() throws IOException {
         File dataDir = new File(directoryPath);
+        assert dataDir != null : "Data directory file object should not be null";
+
         if (!dataDir.exists()) {
             boolean created = dataDir.mkdirs();
             if (!created) {
                 throw new IOException("Failed to create data directory: " + directoryPath);
             }
+            assert created || dataDir.exists() : "Directory should exist after creation attempt";
         }
     }
 
@@ -116,19 +129,24 @@ public class Storage {
      */
     private ArrayList<Task> loadTasksFromFile(File dataFile) throws IOException {
         ArrayList<Task> tasks = new ArrayList<>();
+        assert dataFile != null : "Data file should not be null";
 
         try (Scanner fileScanner = new Scanner(dataFile)) {
+            assert fileScanner != null : "File scanner should not be null";
+
             while (fileScanner.hasNextLine()) {
                 String line = fileScanner.nextLine().trim();
                 if (!line.isEmpty()) {
                     Task task = parseTaskFromFile(line);
                     if (task != null) {
+                        assert task.getDescription() != null : "Loaded task should have description";
                         tasks.add(task);
                     }
                 }
             }
         }
 
+        assert tasks != null : "Returned task list should not be null";
         return tasks;
     }
 
@@ -139,6 +157,8 @@ public class Storage {
      * @param tasks the list of tasks to save
      */
     public void save(ArrayList<Task> tasks) {
+        assert tasks != null : "Tasks list should not be null";
+
         try {
             ensureDirectoryExists();
             saveTasksToFile(tasks);
@@ -155,8 +175,13 @@ public class Storage {
      */
     private void saveTasksToFile(ArrayList<Task> tasks) throws IOException {
         try (PrintWriter printWriter = new PrintWriter(new FileWriter(filePath))) {
+            assert printWriter != null : "Print writer should not be null";
+
             for (Task task : tasks) {
+                assert task != null : "Each task should not be null";
                 String line = formatTaskForFile(task);
+                assert line != null : "Formatted task string should not be null";
+                assert !line.trim().isEmpty() : "Formatted task string should not be empty";
                 printWriter.println(line);
             }
         }
@@ -170,6 +195,9 @@ public class Storage {
      * @return the parsed Task object, or null if parsing fails
      */
     private Task parseTaskFromFile(String line) {
+        assert line != null : "Line should not be null";
+        assert !line.trim().isEmpty() : "Line should not be empty";
+
         try {
             String[] parts = line.split("\\" + FIELD_SEPARATOR);
 
@@ -177,14 +205,21 @@ public class Storage {
                 return null;
             }
 
+            assert parts.length >= MIN_TASK_PARTS : "Should have at least 3 parts for valid task";
+
             String type = parts[0].trim();
             boolean isDone = parts[1].trim().equals(DONE_MARKER);
             String description = parts[2].trim();
+
+            assert type != null : "Task type should not be null";
+            assert description != null : "Task description should not be null";
+            assert !description.isEmpty() : "Task description should not be empty";
 
             Task task = createTaskByType(type, description, parts);
 
             if (task != null && isDone) {
                 task.markAsDone();
+                assert task.isDone() : "Task should be marked as done if loaded as done";
             }
 
             return task;
@@ -213,6 +248,10 @@ public class Storage {
      * @return the created Task object, or null if creation fails
      */
     private Task createTaskByType(String type, String description, String[] parts) {
+        assert type != null : "Task type should not be null";
+        assert description != null : "Task description should not be null";
+        assert parts != null : "Parts array should not be null";
+
         switch (type) {
         case TODO_TYPE:
             return new Todo(description);
@@ -239,6 +278,7 @@ public class Storage {
 
         try {
             LocalDate by = LocalDate.parse(parts[3].trim(), DateTimeFormatter.ISO_LOCAL_DATE);
+            assert by != null : "Parsed deadline date should not be null";
             return new Deadline(description, by);
         } catch (DateTimeParseException e) {
             System.out.println(INVALID_DATE_WARNING + String.join(FIELD_SEPARATOR, parts));
@@ -261,6 +301,9 @@ public class Storage {
         try {
             LocalDateTime start = LocalDateTime.parse(parts[3].trim(), DateTimeFormatter.ISO_LOCAL_DATE_TIME);
             LocalDateTime end = LocalDateTime.parse(parts[4].trim(), DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+            assert start != null : "Parsed start time should not be null";
+            assert end != null : "Parsed end time should not be null";
+            assert !start.isAfter(end) : "Start time should not be after end time";
             return new Event(description, start, end);
         } catch (DateTimeParseException e) {
             System.out.println(INVALID_DATETIME_WARNING + String.join(FIELD_SEPARATOR, parts));
@@ -275,20 +318,37 @@ public class Storage {
      * @return the formatted string for file storage
      */
     private String formatTaskForFile(Task task) {
+        assert task != null : "Task should not be null";
+        assert task.getType() != null : "Task type should not be null";
+        assert task.getDescription() != null : "Task description should not be null";
+
         String isDoneStr = task.isDone() ? DONE_MARKER : NOT_DONE_MARKER;
         String type = task.getType().getSymbol();
         String description = task.getDescription();
 
+        assert type != null : "Task type symbol should not be null";
+        assert !type.isEmpty() : "Task type symbol should not be empty";
+        assert description != null : "Task description should not be null";
+
+        String formattedString;
         switch (task.getType()) {
         case TODO:
-            return formatTodoForFile(type, isDoneStr, description);
+            formattedString = formatTodoForFile(type, isDoneStr, description);
+            break;
         case DEADLINE:
-            return formatDeadlineForFile(type, isDoneStr, description, (Deadline) task);
+            formattedString = formatDeadlineForFile(type, isDoneStr, description, (Deadline) task);
+            break;
         case Event:
-            return formatEventForFile(type, isDoneStr, description, (Event) task);
+            formattedString = formatEventForFile(type, isDoneStr, description, (Event) task);
+            break;
         default:
-            return formatTodoForFile(type, isDoneStr, description);
+            formattedString = formatTodoForFile(type, isDoneStr, description);
+            break;
         }
+
+        assert formattedString != null : "Formatted string should not be null";
+        assert !formattedString.trim().isEmpty() : "Formatted string should not be empty";
+        return formattedString;
     }
 
     /**
@@ -313,6 +373,9 @@ public class Storage {
      * @return formatted string
      */
     private String formatDeadlineForFile(String type, String isDoneStr, String description, Deadline deadline) {
+        assert deadline != null : "Deadline should not be null";
+        assert deadline.getByForFile() != null : "Deadline date string should not be null";
+
         return String.join(FIELD_SEPARATOR, type, isDoneStr, description, deadline.getByForFile());
     }
 
@@ -326,6 +389,10 @@ public class Storage {
      * @return formatted string
      */
     private String formatEventForFile(String type, String isDoneStr, String description, Event event) {
+        assert event != null : "Event should not be null";
+        assert event.getStartForFile() != null : "Event start string should not be null";
+        assert event.getEndForFile() != null : "Event end string should not be null";
+
         return String.join(FIELD_SEPARATOR, type, isDoneStr, description,
                 event.getStartForFile(), event.getEndForFile());
     }

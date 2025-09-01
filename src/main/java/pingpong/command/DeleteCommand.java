@@ -18,7 +18,11 @@ public class DeleteCommand extends Command {
      * @param taskNumber the number of the task to delete (1-indexed)
      */
     public DeleteCommand(int taskNumber) {
+        assert taskNumber > 0 : "Task number should be positive (1-indexed)";
+
         this.taskNumber = taskNumber;
+
+        assert this.taskNumber > 0 : "Task number should be set and positive";
     }
 
     /**
@@ -31,7 +35,22 @@ public class DeleteCommand extends Command {
      */
     @Override
     public void execute(TaskList tasks, Ui ui, Storage storage) throws PingpongException {
-        Task deletedTask = tasks.deleteTask(taskNumber - 1);
+        assert tasks != null : "Task list should not be null";
+        assert ui != null : "UI should not be null";
+        assert storage != null : "Storage should not be null";
+        assert taskNumber > 0 : "Task number should be positive";
+
+        int originalSize = tasks.size();
+        assert originalSize >= 0 : "Original task list size should not be negative";
+
+        int zeroIndexedTaskNumber = taskNumber - 1;
+        assert zeroIndexedTaskNumber >= 0 : "Zero-indexed task number should not be negative";
+
+        Task deletedTask = tasks.deleteTask(zeroIndexedTaskNumber);
+
+        assert deletedTask != null : "Deleted task should not be null";
+        assert tasks.size() == originalSize - 1 : "Task list size should decrease by 1";
+
         ui.showTaskDeleted(deletedTask, tasks.size());
         storage.save(tasks.getAllTasks());
     }

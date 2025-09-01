@@ -57,9 +57,12 @@ public class Parser {
      * @throws PingpongException if the command format is invalid or unrecognized
      */
     public static Command parse(String input) throws PingpongException {
+        assert input != null : "Input should not be null";
+
         validateInput(input);
 
         String command = extractCommand(input);
+        assert command != null : "Extracted command should not be null";
 
         switch (command) {
         case LIST_COMMAND:
@@ -104,6 +107,9 @@ public class Parser {
      * @return the command keyword
      */
     private static String extractCommand(String input) {
+        assert input != null : "Input should not be null";
+        assert !input.trim().isEmpty() : "Input should not be empty";
+
         return input.trim().split("\\s+")[0];
     }
 
@@ -115,6 +121,9 @@ public class Parser {
      * @return true if arguments exist, false otherwise
      */
     private static boolean hasArguments(String input, String command) {
+        assert input != null : "Input should not be null";
+        assert command != null : "Command should not be null";
+
         return input.length() > command.length() &&
                 input.substring(command.length()).trim().length() > 0;
     }
@@ -128,18 +137,28 @@ public class Parser {
      * @throws PingpongException if task numbers are missing or invalid
      */
     private static Command parseMarkCommand(String input) throws PingpongException {
+        assert input != null : "Input should not be null";
+        assert input.startsWith("mark") : "Input should start with 'mark'";
+
         if (!hasArguments(input, MARK_COMMAND)) {
             throw new PingpongException(MARK_MISSING_ERROR);
         }
 
         String numbersStr = input.substring(MARK_COMMAND.length()).trim();
+        assert !numbersStr.isEmpty() : "Numbers string should not be empty after validation";
+
         String[] numberParts = numbersStr.split("\\s+");
+        assert numberParts != null : "Number parts array should not be null";
+        assert numberParts.length > 0 : "Should have at least one number part";
 
         if (numberParts.length == 1) {
             int taskNum = parseTaskNumber(numberParts[0]);
+            assert taskNum > 0 : "Task number should be positive";
             return new MarkCommand(taskNum);
         } else {
             int[] taskNumbers = parseTaskNumbers(numberParts);
+            assert taskNumbers != null : "Parsed task numbers should not be null";
+            assert taskNumbers.length > 1 : "Should have multiple task numbers";
             return new MarkMultipleCommand(taskNumbers);
         }
     }
@@ -153,18 +172,28 @@ public class Parser {
      * @throws PingpongException if task numbers are missing or invalid
      */
     private static Command parseUnmarkCommand(String input) throws PingpongException {
+        assert input != null : "Input should not be null";
+        assert input.startsWith("unmark") : "Input should start with 'unmark'";
+
         if (!hasArguments(input, UNMARK_COMMAND)) {
             throw new PingpongException(UNMARK_MISSING_ERROR);
         }
 
         String numbersStr = input.substring(UNMARK_COMMAND.length()).trim();
+        assert !numbersStr.isEmpty() : "Numbers string should not be empty after validation";
+
         String[] numberParts = numbersStr.split("\\s+");
+        assert numberParts != null : "Number parts array should not be null";
+        assert numberParts.length > 0 : "Should have at least one number part";
 
         if (numberParts.length == 1) {
             int taskNum = parseTaskNumber(numberParts[0]);
+            assert taskNum > 0 : "Task number should be positive";
             return new UnmarkCommand(taskNum);
         } else {
             int[] taskNumbers = parseTaskNumbers(numberParts);
+            assert taskNumbers != null : "Parsed task numbers should not be null";
+            assert taskNumbers.length > 1 : "Should have multiple task numbers";
             return new UnmarkMultipleCommand(taskNumbers);
         }
     }
@@ -178,18 +207,28 @@ public class Parser {
      * @throws PingpongException if task numbers are missing or invalid
      */
     private static Command parseDeleteCommand(String input) throws PingpongException {
+        assert input != null : "Input should not be null";
+        assert input.startsWith("delete") : "Input should start with 'delete'";
+
         if (!hasArguments(input, DELETE_COMMAND)) {
             throw new PingpongException(DELETE_MISSING_ERROR);
         }
 
         String numbersStr = input.substring(DELETE_COMMAND.length()).trim();
+        assert !numbersStr.isEmpty() : "Numbers string should not be empty after validation";
+
         String[] numberParts = numbersStr.split("\\s+");
+        assert numberParts != null : "Number parts array should not be null";
+        assert numberParts.length > 0 : "Should have at least one number part";
 
         if (numberParts.length == 1) {
             int taskNum = parseTaskNumber(numberParts[0]);
+            assert taskNum > 0 : "Task number should be positive";
             return new DeleteCommand(taskNum);
         } else {
             int[] taskNumbers = parseTaskNumbers(numberParts);
+            assert taskNumbers != null : "Parsed task numbers should not be null";
+            assert taskNumbers.length > 1 : "Should have multiple task numbers";
             return new DeleteMultipleCommand(taskNumbers);
         }
     }
@@ -203,18 +242,26 @@ public class Parser {
      * @throws PingpongException if descriptions are missing or invalid
      */
     private static Command parseAddMultipleCommand(String input) throws PingpongException {
+        assert input != null : "Input should not be null";
+        assert input.startsWith("addmultiple") : "Input should start with 'addmultiple'";
+
         if (!hasArguments(input, ADD_MULTIPLE_COMMAND)) {
             throw new PingpongException(ADD_MULTIPLE_EMPTY_ERROR);
         }
 
         String descriptionsStr = input.substring(ADD_MULTIPLE_COMMAND.length()).trim();
+        assert !descriptionsStr.isEmpty() : "Descriptions string should not be empty after validation";
+
         String[] descriptions = descriptionsStr.split(";");
+        assert descriptions != null : "Descriptions array should not be null";
+
         ArrayList<String> validDescriptions = extractValidDescriptions(descriptions);
 
         if (validDescriptions.isEmpty()) {
             throw new PingpongException("Please provide at least one valid todo description.");
         }
 
+        assert !validDescriptions.isEmpty() : "Should have at least one valid description";
         return new AddMultipleCommand(validDescriptions.toArray(new String[0]));
     }
 
@@ -225,8 +272,11 @@ public class Parser {
      * @return list of valid, non-empty descriptions
      */
     private static ArrayList<String> extractValidDescriptions(String[] descriptions) {
+        assert descriptions != null : "Descriptions array should not be null";
+
         ArrayList<String> validDescriptions = new ArrayList<>();
         for (String desc : descriptions) {
+            assert desc != null : "Each description should not be null";
             String trimmed = desc.trim();
             if (!trimmed.isEmpty()) {
                 validDescriptions.add(trimmed);
@@ -243,11 +293,14 @@ public class Parser {
      * @throws PingpongException if task number is invalid
      */
     private static int parseTaskNumber(String numberStr) throws PingpongException {
+        assert numberStr != null : "Number string should not be null";
+
         try {
             int taskNum = Integer.parseInt(numberStr);
             if (taskNum <= 0) {
                 throw new PingpongException(POSITIVE_NUMBER_ERROR);
             }
+            assert taskNum > 0 : "Parsed task number should be positive";
             return taskNum;
         } catch (NumberFormatException e) {
             throw new PingpongException(INVALID_TASK_NUMBER_ERROR);
@@ -262,11 +315,17 @@ public class Parser {
      * @throws PingpongException if any task number is invalid
      */
     private static int[] parseTaskNumbers(String... numberParts) throws PingpongException {
+        assert numberParts != null : "Number parts array should not be null";
+        assert numberParts.length > 0 : "Should have at least one number part";
+
         int[] taskNumbers = new int[numberParts.length];
 
         for (int i = 0; i < numberParts.length; i++) {
+            assert numberParts[i] != null : "Each number part should not be null";
             taskNumbers[i] = parseTaskNumber(numberParts[i]);
         }
+
+        assert taskNumbers.length == numberParts.length : "All numbers should be parsed";
         return taskNumbers;
     }
 
@@ -279,11 +338,16 @@ public class Parser {
      * @throws PingpongException if the description is empty
      */
     private static Command parseTodoCommand(String input) throws PingpongException {
+        assert input != null : "Input should not be null";
+        assert input.startsWith("todo") : "Input should start with 'todo'";
+
         if (!hasArguments(input, TODO_COMMAND)) {
             throw new PingpongException(TODO_EMPTY_ERROR);
         }
 
         String description = input.substring(TODO_COMMAND.length()).trim();
+        assert !description.isEmpty() : "Description should not be empty after validation";
+
         return new AddTodoCommand(description);
     }
 
@@ -296,6 +360,9 @@ public class Parser {
      * @throws PingpongException if the format is invalid or dates cannot be parsed
      */
     private static Command parseDeadlineCommand(String input) throws PingpongException {
+        assert input != null : "Input should not be null";
+        assert input.startsWith("deadline") : "Input should start with 'deadline'";
+
         if (!hasArguments(input, DEADLINE_COMMAND)) {
             throw new PingpongException(DEADLINE_EMPTY_ERROR);
         }
@@ -305,11 +372,14 @@ public class Parser {
             throw new PingpongException("Please use format: deadline <description> /by <yyyy-MM-dd>");
         }
 
+        assert parts.length == 2 : "Should have exactly 2 parts after splitting";
+
         String description = parts[0].trim();
         String byStr = parts[1].trim();
 
         validateDeadlineComponents(description, byStr);
         LocalDate by = parseDate(byStr);
+        assert by != null : "Parsed date should not be null";
 
         return new AddDeadlineCommand(description, by);
     }
@@ -328,6 +398,9 @@ public class Parser {
         if (byStr.isEmpty()) {
             throw new PingpongException("The deadline date cannot be empty.");
         }
+
+        assert !description.isEmpty() : "Description should not be empty after validation";
+        assert !byStr.isEmpty() : "Date string should not be empty after validation";
     }
 
     /**
@@ -339,6 +412,9 @@ public class Parser {
      * @throws PingpongException if the format is invalid, dates cannot be parsed, or start time is after end time
      */
     private static Command parseEventCommand(String input) throws PingpongException {
+        assert input != null : "Input should not be null";
+        assert input.startsWith("event") : "Input should start with 'event'";
+
         if (!hasArguments(input, EVENT_COMMAND)) {
             throw new PingpongException(EVENT_EMPTY_ERROR);
         }
@@ -352,6 +428,9 @@ public class Parser {
 
         LocalDateTime from = parseDateTime(fromStr);
         LocalDateTime to = parseDateTime(toStr);
+
+        assert from != null : "Parsed start time should not be null";
+        assert to != null : "Parsed end time should not be null";
 
         validateEventTiming(from, to);
 
@@ -374,6 +453,8 @@ public class Parser {
                     + "/from <yyyy-MM-dd HHmm> /to <yyyy-MM-dd HHmm>");
         }
 
+        assert fromParts.length == 2 : "Should have exactly 2 parts after splitting by /from";
+
         String description = fromParts[0].trim();
         String[] toParts = fromParts[1].split(" /to ");
 
@@ -381,6 +462,8 @@ public class Parser {
             throw new PingpongException("Please use format: event <description> "
                     + "/from <yyyy-MM-dd HHmm> /to <yyyy-MM-dd HHmm>");
         }
+
+        assert toParts.length == 2 : "Should have exactly 2 parts after splitting by /to";
 
         return new String[]{description, toParts[0].trim(), toParts[1].trim()};
     }
@@ -404,6 +487,10 @@ public class Parser {
         if (toStr.isEmpty()) {
             throw new PingpongException("The event end time cannot be empty.");
         }
+
+        assert !description.isEmpty() : "Description should not be empty after validation";
+        assert !fromStr.isEmpty() : "From string should not be empty after validation";
+        assert !toStr.isEmpty() : "To string should not be empty after validation";
     }
 
     /**
@@ -417,6 +504,8 @@ public class Parser {
         if (from.isAfter(to)) {
             throw new PingpongException("Event start time cannot be after end time.");
         }
+
+        assert !from.isAfter(to) : "Start time should not be after end time";
     }
 
     /**
@@ -428,11 +517,16 @@ public class Parser {
      * @throws PingpongException if the date/keyword is missing or in invalid format
      */
     private static Command parseFindCommand(String input) throws PingpongException {
+        assert input != null : "Input should not be null";
+        assert input.startsWith("find") : "Input should start with 'find'";
+
         if (!hasArguments(input, FIND_COMMAND)) {
             throw new PingpongException(FIND_EMPTY_ERROR);
         }
 
         String searchTerm = input.substring(FIND_COMMAND.length()).trim();
+        assert !searchTerm.isEmpty() : "Search term should not be empty after validation";
+
         return new FindCommand(searchTerm);
     }
 
@@ -444,8 +538,13 @@ public class Parser {
      * @throws PingpongException if the date format is invalid
      */
     private static LocalDate parseDate(String dateStr) throws PingpongException {
+        assert dateStr != null : "Date string should not be null";
+        assert !dateStr.trim().isEmpty() : "Date string should not be empty";
+
         try {
-            return LocalDate.parse(dateStr, DateTimeFormatter.ofPattern(DATE_FORMAT));
+            LocalDate parsed = LocalDate.parse(dateStr, DateTimeFormatter.ofPattern(DATE_FORMAT));
+            assert parsed != null : "Parsed date should not be null";
+            return parsed;
         } catch (DateTimeParseException e) {
             throw new PingpongException("Invalid date format. Please use yyyy-MM-dd format (e.g., 2019-12-02)");
         }
@@ -463,16 +562,23 @@ public class Parser {
      * @throws PingpongException if the date-time format is invalid
      */
     private static LocalDateTime parseDateTime(String dateTimeStr) throws PingpongException {
+        assert dateTimeStr != null : "DateTime string should not be null";
+        assert !dateTimeStr.trim().isEmpty() : "DateTime string should not be empty";
+
         try {
+            LocalDateTime parsed;
             if (dateTimeStr.matches(DATETIME_HHMM_REGEX)) {
-                return LocalDateTime.parse(dateTimeStr, DateTimeFormatter.ofPattern(DATETIME_FORMAT_HHMM));
+                parsed = LocalDateTime.parse(dateTimeStr, DateTimeFormatter.ofPattern(DATETIME_FORMAT_HHMM));
             } else if (dateTimeStr.matches(DATETIME_COLON_REGEX)) {
-                return LocalDateTime.parse(dateTimeStr, DateTimeFormatter.ofPattern(DATETIME_FORMAT_COLON));
+                parsed = LocalDateTime.parse(dateTimeStr, DateTimeFormatter.ofPattern(DATETIME_FORMAT_COLON));
             } else if (dateTimeStr.matches(DATE_REGEX)) {
-                return LocalDate.parse(dateTimeStr, DateTimeFormatter.ofPattern(DATE_FORMAT)).atStartOfDay();
+                parsed = LocalDate.parse(dateTimeStr, DateTimeFormatter.ofPattern(DATE_FORMAT)).atStartOfDay();
             } else {
                 throw new DateTimeParseException("Unsupported format", dateTimeStr, 0);
             }
+
+            assert parsed != null : "Parsed datetime should not be null";
+            return parsed;
         } catch (DateTimeParseException e) {
             throw new PingpongException("Invalid datetime format."
                     + "Please use formats like: 2019-12-02 1800, 2019-12-02 18:00, or 2019-12-02");
