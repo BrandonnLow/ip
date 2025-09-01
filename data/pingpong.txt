@@ -1,5 +1,0 @@
-T | 1 | aaaaaa
-T | 0 | 11111111111111111
-T | 1 | oajfbnweob wojfgnowegn weojfnweo
-T | 0 | wkjigbwe
-T | 0 | wjkgnwoajgbwqa\
