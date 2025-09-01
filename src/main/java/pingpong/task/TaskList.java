@@ -11,6 +11,8 @@ import pingpong.PingpongException;
  * Acts as the main container for all tasks in the Pingpong application.
  */
 public class TaskList {
+    private static final String TASK_NOT_EXISTS_ERROR = "Task number %d does not exist.";
+
     private ArrayList<Task> tasks;
 
     /**
@@ -60,9 +62,7 @@ public class TaskList {
         assert tasks != null : "Task list should be initialized";
         assert index >= 0 : "Index should not be negative";
 
-        if (index < 0 || index >= tasks.size()) {
-            throw new PingpongException("Task number " + (index + 1) + " does not exist.");
-        }
+        validateTaskIndex(index);
 
         int originalSize = tasks.size();
         Task deletedTask = tasks.remove(index);
@@ -83,9 +83,7 @@ public class TaskList {
         assert tasks != null : "Task list should be initialized";
         assert index >= 0 : "Index should not be negative";
 
-        if (index < 0 || index >= tasks.size()) {
-            throw new PingpongException("Task number " + (index + 1) + " does not exist.");
-        }
+        validateTaskIndex(index);
 
         Task task = tasks.get(index);
         assert task != null : "Retrieved task should not be null";
@@ -130,9 +128,7 @@ public class TaskList {
         assert tasks != null : "Task list should be initialized";
         assert index >= 0 : "Index should not be negative";
 
-        if (index < 0 || index >= tasks.size()) {
-            throw new PingpongException("Task number " + (index + 1) + " does not exist.");
-        }
+        validateTaskIndex(index);
 
         Task task = tasks.get(index);
         assert task != null : "Retrieved task should not be null";
@@ -176,13 +172,23 @@ public class TaskList {
         assert tasks != null : "Task list should be initialized";
         assert index >= 0 : "Index should not be negative";
 
-        if (index < 0 || index >= tasks.size()) {
-            throw new PingpongException("Task number " + (index + 1) + " does not exist.");
-        }
+        validateTaskIndex(index);
 
         Task task = tasks.get(index);
         assert task != null : "Retrieved task should not be null";
         return task;
+    }
+
+    /**
+     * Validates that the given index is within valid range.
+     *
+     * @param index the index to validate
+     * @throws PingpongException if index is out of bounds
+     */
+    private void validateTaskIndex(int index) throws PingpongException {
+        if (index < 0 || index >= tasks.size()) {
+            throw new PingpongException(String.format(TASK_NOT_EXISTS_ERROR, index + 1));
+        }
     }
 
     /**
@@ -310,33 +316,63 @@ public class TaskList {
 
         for (Task task : tasks) {
             assert task != null : "Task in list should not be null";
-            boolean matches = false;
 
-            if (task instanceof Deadline) {
-                Deadline deadline = (Deadline) task;
-                assert deadline.getBy() != null : "Deadline date should not be null";
-                if (deadline.getBy().equals(targetDate)) {
-                    matches = true;
-                }
-            } else if (task instanceof Event) {
-                Event event = (Event) task;
-                assert event.getStart() != null : "Event start time should not be null";
-                assert event.getEnd() != null : "Event end time should not be null";
-
-                LocalDate startDate = event.getStart().toLocalDate();
-                LocalDate endDate = event.getEnd().toLocalDate();
-                if (!targetDate.isBefore(startDate) && !targetDate.isAfter(endDate)) {
-                    matches = true;
-                }
-            }
-
-            if (matches) {
+            if (isTaskOnDate(task, targetDate)) {
                 matchingTasks.add(task);
             }
         }
 
         assert matchingTasks != null : "Matching tasks list should not be null";
         return matchingTasks;
+    }
+
+    /**
+     * Checks if a task occurs on the specified date.
+     *
+     * @param task the task to check
+     * @param targetDate the target date
+     * @return true if task occurs on the date, false otherwise
+     */
+    private boolean isTaskOnDate(Task task, LocalDate targetDate) {
+        if (task instanceof Deadline) {
+            return isDeadlineOnDate((Deadline) task, targetDate);
+        } else if (task instanceof Event) {
+            return isEventOnDate((Event) task, targetDate);
+        }
+        return false;
+    }
+
+    /**
+     * Checks if a deadline task occurs on the specified date.
+     *
+     * @param deadline the deadline task
+     * @param targetDate the target date
+     * @return true if deadline is on the date
+     */
+    private boolean isDeadlineOnDate(Deadline deadline, LocalDate targetDate) {
+        assert deadline != null : "Deadline should not be null";
+        assert deadline.getBy() != null : "Deadline date should not be null";
+        assert targetDate != null : "Target date should not be null";
+
+        return deadline.getBy().equals(targetDate);
+    }
+
+    /**
+     * Checks if an event task occurs on the specified date.
+     *
+     * @param event the event task
+     * @param targetDate the target date
+     * @return true if date falls within event period
+     */
+    private boolean isEventOnDate(Event event, LocalDate targetDate) {
+        assert event != null : "Event should not be null";
+        assert event.getStart() != null : "Event start time should not be null";
+        assert event.getEnd() != null : "Event end time should not be null";
+        assert targetDate != null : "Target date should not be null";
+
+        LocalDate startDate = event.getStart().toLocalDate();
+        LocalDate endDate = event.getEnd().toLocalDate();
+        return !targetDate.isBefore(startDate) && !targetDate.isAfter(endDate);
     }
 
     /**
@@ -358,13 +394,28 @@ public class TaskList {
             assert task != null : "Task in list should not be null";
             assert task.getDescription() != null : "Task description should not be null";
 
-            if (task.getDescription().toLowerCase().contains(keywordLower)) {
+            if (containsKeyword(task, keywordLower)) {
                 matchingTasks.add(task);
             }
         }
 
         assert matchingTasks != null : "Matching tasks list should not be null";
         return matchingTasks;
+    }
+
+    /**
+     * Checks if a task's description contains the specified keyword.
+     *
+     * @param task the task to check
+     * @param keywordLower the keyword in lowercase
+     * @return true if description contains keyword
+     */
+    private boolean containsKeyword(Task task, String keywordLower) {
+        assert task != null : "Task should not be null";
+        assert task.getDescription() != null : "Task description should not be null";
+        assert keywordLower != null : "Keyword should not be null";
+
+        return task.getDescription().toLowerCase().contains(keywordLower);
     }
 
     /**
@@ -385,19 +436,34 @@ public class TaskList {
             assert task != null : "Task in list should not be null";
             assert task.getDescription() != null : "Task description should not be null";
 
-            String descriptionLower = task.getDescription().toLowerCase();
-            for (String keyword : keywords) {
-                assert keyword != null : "Each keyword should not be null";
-                if (descriptionLower.contains(keyword.toLowerCase())) {
-                    if (!matchingTasks.contains(task)) {
-                        matchingTasks.add(task);
-                    }
-                    break; // Found a match, no need to check other keywords for this task
-                }
+            if (taskMatchesAnyKeyword(task, keywords)) {
+                matchingTasks.add(task);
             }
         }
 
         assert matchingTasks != null : "Matching tasks list should not be null";
         return matchingTasks;
+    }
+
+    /**
+     * Checks if a task matches any of the provided keywords.
+     *
+     * @param task the task to check
+     * @param keywords the keywords to match against
+     * @return true if task matches any keyword
+     */
+    private boolean taskMatchesAnyKeyword(Task task, String... keywords) {
+        assert task != null : "Task should not be null";
+        assert task.getDescription() != null : "Task description should not be null";
+        assert keywords != null : "Keywords array should not be null";
+
+        String descriptionLower = task.getDescription().toLowerCase();
+        for (String keyword : keywords) {
+            assert keyword != null : "Each keyword should not be null";
+            if (descriptionLower.contains(keyword.toLowerCase())) {
+                return true;
+            }
+        }
+        return false;
     }
 }
