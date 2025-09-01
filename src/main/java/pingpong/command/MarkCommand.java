@@ -18,7 +18,11 @@ public class MarkCommand extends Command {
      * @param taskNumber the number of the task to mark (1-indexed)
      */
     public MarkCommand(int taskNumber) {
+        assert taskNumber > 0 : "Task number should be positive (1-indexed)";
+
         this.taskNumber = taskNumber;
+
+        assert this.taskNumber > 0 : "Task number should be set and positive";
     }
 
     /**
@@ -31,7 +35,19 @@ public class MarkCommand extends Command {
      */
     @Override
     public void execute(TaskList tasks, Ui ui, Storage storage) throws PingpongException {
-        Task markedTask = tasks.markTask(taskNumber - 1);
+        assert tasks != null : "Task list should not be null";
+        assert ui != null : "UI should not be null";
+        assert storage != null : "Storage should not be null";
+        assert taskNumber > 0 : "Task number should be positive";
+
+        int zeroIndexedTaskNumber = taskNumber - 1;
+        assert zeroIndexedTaskNumber >= 0 : "Zero-indexed task number should not be negative";
+
+        Task markedTask = tasks.markTask(zeroIndexedTaskNumber);
+
+        assert markedTask != null : "Marked task should not be null";
+        assert markedTask.isDone() : "Task should be marked as done after execution";
+
         ui.showTaskMarked(markedTask);
         storage.save(tasks.getAllTasks());
     }

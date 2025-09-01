@@ -18,7 +18,12 @@ public class AddTodoCommand extends Command {
      * @param description the description of the todo task
      */
     public AddTodoCommand(String description) {
+        assert description != null : "Todo description should not be null";
+        assert !description.trim().isEmpty() : "Todo description should not be empty";
+
         this.description = description;
+
+        assert this.description != null : "Todo description should be set";
     }
 
     /**
@@ -31,7 +36,18 @@ public class AddTodoCommand extends Command {
      */
     @Override
     public void execute(TaskList tasks, Ui ui, Storage storage) throws PingpongException {
+        assert tasks != null : "Task list should not be null";
+        assert ui != null : "UI should not be null";
+        assert storage != null : "Storage should not be null";
+        assert description != null : "Description should not be null";
+
+        int originalSize = tasks.size();
         Task todo = tasks.addTodo(description);
+
+        assert todo != null : "Created todo should not be null";
+        assert tasks.size() == originalSize + 1 : "Task list size should increase by 1";
+        assert tasks.getAllTasks().contains(todo) : "Todo should be in task list";
+
         ui.showTaskAdded(todo, tasks.size());
         storage.save(tasks.getAllTasks());
     }
