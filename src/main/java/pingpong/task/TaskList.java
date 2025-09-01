@@ -3,6 +3,8 @@ package pingpong.task;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 import pingpong.PingpongException;
 
@@ -69,18 +71,29 @@ public class TaskList {
     }
 
     /**
-     * Marks multiple tasks as completed using varargs.
+     * Marks multiple tasks as completed using varargs and streams.
      *
      * @param indices the 0-based indices of tasks to mark
      * @return a list of marked tasks
      * @throws PingpongException if any index is invalid
      */
     public ArrayList<Task> markTasks(int... indices) throws PingpongException {
-        ArrayList<Task> markedTasks = new ArrayList<>();
-        for (int index : indices) {
-            markedTasks.add(markTask(index));
+        try {
+            return Arrays.stream(indices)
+                    .mapToObj(index -> {
+                        try {
+                            return markTask(index);
+                        } catch (PingpongException e) {
+                            throw new RuntimeException(e);
+                        }
+                    })
+                    .collect(Collectors.toCollection(ArrayList::new));
+        } catch (RuntimeException e) {
+            if (e.getCause() instanceof PingpongException) {
+                throw (PingpongException) e.getCause();
+            }
+            throw e;
         }
-        return markedTasks;
     }
 
     /**
@@ -100,18 +113,29 @@ public class TaskList {
     }
 
     /**
-     * Unmarks multiple tasks using varargs.
+     * Unmarks multiple tasks using varargs and streams.
      *
      * @param indices the 0-based indices of tasks to unmark
      * @return a list of unmarked tasks
      * @throws PingpongException if any index is invalid
      */
     public ArrayList<Task> unmarkTasks(int... indices) throws PingpongException {
-        ArrayList<Task> unmarkedTasks = new ArrayList<>();
-        for (int index : indices) {
-            unmarkedTasks.add(unmarkTask(index));
+        try {
+            return Arrays.stream(indices)
+                    .mapToObj(index -> {
+                        try {
+                            return unmarkTask(index);
+                        } catch (PingpongException e) {
+                            throw new RuntimeException(e);
+                        }
+                    })
+                    .collect(Collectors.toCollection(ArrayList::new));
+        } catch (RuntimeException e) {
+            if (e.getCause() instanceof PingpongException) {
+                throw (PingpongException) e.getCause();
+            }
+            throw e;
         }
-        return unmarkedTasks;
     }
 
     /**
@@ -159,18 +183,15 @@ public class TaskList {
     }
 
     /**
-     * Creates and adds multiple Todo tasks to the task list using varargs.
+     * Creates and adds multiple Todo tasks to the task list using streams.
      *
      * @param descriptions the descriptions of the todo tasks
      * @return a list of created Todo tasks
      */
     public ArrayList<Task> addTodos(String... descriptions) {
-        ArrayList<Task> createdTasks = new ArrayList<>();
-        for (String description : descriptions) {
-            Task task = addTodo(description);
-            createdTasks.add(task);
-        }
-        return createdTasks;
+        return Arrays.stream(descriptions)
+                .map(this::addTodo)
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     /**
@@ -201,7 +222,7 @@ public class TaskList {
     }
 
     /**
-     * Finds all tasks that occur on the specified date.
+     * Finds all tasks that occur on the specified date using streams.
      * For Deadline tasks, matches if the deadline is on the target date.
      * For Event tasks, matches if the target date falls within the event period.
      * Todo tasks are never matched as they have no associated dates.
@@ -210,72 +231,51 @@ public class TaskList {
      * @return a list of tasks occurring on the specified date
      */
     public ArrayList<Task> findTasksOnDate(LocalDate targetDate) {
-        ArrayList<Task> matchingTasks = new ArrayList<>();
-
-        for (Task task : tasks) {
-            boolean matches = false;
-
-            if (task instanceof Deadline) {
-                Deadline deadline = (Deadline) task;
-                if (deadline.getBy().equals(targetDate)) {
-                    matches = true;
-                }
-            } else if (task instanceof Event) {
-                Event event = (Event) task;
-                LocalDate startDate = event.getStart().toLocalDate();
-                LocalDate endDate = event.getEnd().toLocalDate();
-                if (!targetDate.isBefore(startDate) && !targetDate.isAfter(endDate)) {
-                    matches = true;
-                }
-            }
-
-            if (matches) {
-                matchingTasks.add(task);
-            }
-        }
-        return matchingTasks;
+        return tasks.stream()
+                .filter(task -> {
+                    if (task instanceof Deadline) {
+                        Deadline deadline = (Deadline) task;
+                        return deadline.getBy().equals(targetDate);
+                    } else if (task instanceof Event) {
+                        Event event = (Event) task;
+                        LocalDate startDate = event.getStart().toLocalDate();
+                        LocalDate endDate = event.getEnd().toLocalDate();
+                        return !targetDate.isBefore(startDate) && !targetDate.isAfter(endDate);
+                    }
+                    return false;
+                })
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     /**
-     * Finds all tasks that contain the specified keyword in their description.
+     * Finds all tasks that contain the specified keyword in their description using streams.
      * The search is case-insensitive.
      *
      * @param keyword the keyword to search for in task descriptions
      * @return a list of tasks whose descriptions contain the keyword
      */
     public ArrayList<Task> findTasksByKeyword(String keyword) {
-        ArrayList<Task> matchingTasks = new ArrayList<>();
         String keywordLower = keyword.toLowerCase();
 
-        for (Task task : tasks) {
-            if (task.getDescription().toLowerCase().contains(keywordLower)) {
-                matchingTasks.add(task);
-            }
-        }
-        return matchingTasks;
+        return tasks.stream()
+                .filter(task -> task.getDescription().toLowerCase().contains(keywordLower))
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     /**
-     * Finds all tasks that contain any of the specified keywords in their description using varargs.
+     * Finds all tasks that contain any of the specified keywords in their description using streams.
      * The search is case-insensitive.
      *
      * @param keywords the keywords to search for in task descriptions
      * @return a list of tasks whose descriptions contain any of the keywords
      */
     public ArrayList<Task> findTasksByKeywords(String... keywords) {
-        ArrayList<Task> matchingTasks = new ArrayList<>();
-
-        for (Task task : tasks) {
-            String descriptionLower = task.getDescription().toLowerCase();
-            for (String keyword : keywords) {
-                if (descriptionLower.contains(keyword.toLowerCase())) {
-                    if (!matchingTasks.contains(task)) {
-                        matchingTasks.add(task);
-                    }
-                    break; // Found a match, no need to check other keywords for this task
-                }
-            }
-        }
-        return matchingTasks;
+        return tasks.stream()
+                .filter(task -> {
+                    String descriptionLower = task.getDescription().toLowerCase();
+                    return Arrays.stream(keywords)
+                            .anyMatch(keyword -> descriptionLower.contains(keyword.toLowerCase()));
+                })
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 }
