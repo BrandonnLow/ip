@@ -3,6 +3,8 @@ package pingpong.task;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 import pingpong.PingpongException;
 
@@ -60,7 +62,6 @@ public class TaskList {
      */
     public Task deleteTask(int index) throws PingpongException {
         assert tasks != null : "Task list should be initialized";
-        assert index >= 0 : "Index should not be negative";
 
         validateTaskIndex(index);
 
@@ -81,14 +82,12 @@ public class TaskList {
      */
     public Task markTask(int index) throws PingpongException {
         assert tasks != null : "Task list should be initialized";
-        assert index >= 0 : "Index should not be negative";
 
         validateTaskIndex(index);
 
         Task task = tasks.get(index);
         assert task != null : "Retrieved task should not be null";
 
-        boolean wasMarked = task.isDone();
         task.markAsDone();
 
         assert task.isDone() : "Task should be marked as done after marking";
@@ -96,7 +95,7 @@ public class TaskList {
     }
 
     /**
-     * Marks multiple tasks as completed using varargs.
+     * Marks multiple tasks as completed using varargs and streams.
      *
      * @param indices the 0-based indices of tasks to mark
      * @return a list of marked tasks
@@ -105,7 +104,10 @@ public class TaskList {
     public ArrayList<Task> markTasks(int... indices) throws PingpongException {
         assert tasks != null : "Task list should be initialized";
         assert indices != null : "Indices array should not be null";
-        assert indices.length > 0 : "Should have at least one index to mark";
+
+        if (indices.length == 0) {
+            return new ArrayList<>();
+        }
 
         ArrayList<Task> markedTasks = new ArrayList<>();
         for (int index : indices) {
@@ -126,7 +128,6 @@ public class TaskList {
      */
     public Task unmarkTask(int index) throws PingpongException {
         assert tasks != null : "Task list should be initialized";
-        assert index >= 0 : "Index should not be negative";
 
         validateTaskIndex(index);
 
@@ -139,8 +140,9 @@ public class TaskList {
         return task;
     }
 
+
     /**
-     * Unmarks multiple tasks using varargs.
+     * Unmarks multiple tasks using varargs and streams.
      *
      * @param indices the 0-based indices of tasks to unmark
      * @return a list of unmarked tasks
@@ -149,7 +151,10 @@ public class TaskList {
     public ArrayList<Task> unmarkTasks(int... indices) throws PingpongException {
         assert tasks != null : "Task list should be initialized";
         assert indices != null : "Indices array should not be null";
-        assert indices.length > 0 : "Should have at least one index to unmark";
+
+        if (indices.length == 0) {
+            return new ArrayList<>();
+        }
 
         ArrayList<Task> unmarkedTasks = new ArrayList<>();
         for (int index : indices) {
@@ -233,21 +238,23 @@ public class TaskList {
     }
 
     /**
-     * Creates and adds multiple Todo tasks to the task list using varargs.
+     * Creates and adds multiple Todo tasks to the task list using streams.
      *
      * @param descriptions the descriptions of the todo tasks
      * @return a list of created Todo tasks
      */
     public ArrayList<Task> addTodos(String... descriptions) {
         assert descriptions != null : "Descriptions array should not be null";
-        assert descriptions.length > 0 : "Should have at least one description";
         assert tasks != null : "Task list should be initialized";
+
+        if (descriptions.length == 0) {
+            return new ArrayList<>();
+        }
 
         ArrayList<Task> createdTasks = new ArrayList<>();
         for (String description : descriptions) {
-            assert description != null : "Each description should not be null";
-            Task task = addTodo(description);
-            createdTasks.add(task);
+            Task createdTask = addTodo(description);
+            createdTasks.add(createdTask);
         }
 
         assert createdTasks.size() == descriptions.length : "Number of created tasks should match descriptions";
@@ -300,7 +307,7 @@ public class TaskList {
     }
 
     /**
-     * Finds all tasks that occur on the specified date.
+     * Finds all tasks that occur on the specified date using streams.
      * For Deadline tasks, matches if the deadline is on the target date.
      * For Event tasks, matches if the target date falls within the event period.
      * Todo tasks are never matched as they have no associated dates.
@@ -312,15 +319,12 @@ public class TaskList {
         assert targetDate != null : "Target date should not be null";
         assert tasks != null : "Task list should be initialized";
 
-        ArrayList<Task> matchingTasks = new ArrayList<>();
-
-        for (Task task : tasks) {
-            assert task != null : "Task in list should not be null";
-
-            if (isTaskOnDate(task, targetDate)) {
-                matchingTasks.add(task);
-            }
-        }
+        ArrayList<Task> matchingTasks = tasks.stream()
+                .filter(task -> {
+                    assert task != null : "Task in list should not be null";
+                    return isTaskOnDate(task, targetDate);
+                })
+                .collect(Collectors.toCollection(ArrayList::new));
 
         assert matchingTasks != null : "Matching tasks list should not be null";
         return matchingTasks;
@@ -376,7 +380,7 @@ public class TaskList {
     }
 
     /**
-     * Finds all tasks that contain the specified keyword in their description.
+     * Finds all tasks that contain the specified keyword in their description using streams.
      * The search is case-insensitive.
      *
      * @param keyword the keyword to search for in task descriptions
@@ -387,17 +391,15 @@ public class TaskList {
         assert !keyword.trim().isEmpty() : "Keyword should not be empty";
         assert tasks != null : "Task list should be initialized";
 
-        ArrayList<Task> matchingTasks = new ArrayList<>();
         String keywordLower = keyword.toLowerCase();
 
-        for (Task task : tasks) {
-            assert task != null : "Task in list should not be null";
-            assert task.getDescription() != null : "Task description should not be null";
-
-            if (containsKeyword(task, keywordLower)) {
-                matchingTasks.add(task);
-            }
-        }
+        ArrayList<Task> matchingTasks = tasks.stream()
+                .filter(task -> {
+                    assert task != null : "Task in list should not be null";
+                    assert task.getDescription() != null : "Task description should not be null";
+                    return containsKeyword(task, keywordLower);
+                })
+                .collect(Collectors.toCollection(ArrayList::new));
 
         assert matchingTasks != null : "Matching tasks list should not be null";
         return matchingTasks;
@@ -419,7 +421,7 @@ public class TaskList {
     }
 
     /**
-     * Finds all tasks that contain any of the specified keywords in their description using varargs.
+     * Finds all tasks that contain any of the specified keywords in their description using streams.
      * The search is case-insensitive.
      *
      * @param keywords the keywords to search for in task descriptions
@@ -427,19 +429,19 @@ public class TaskList {
      */
     public ArrayList<Task> findTasksByKeywords(String... keywords) {
         assert keywords != null : "Keywords array should not be null";
-        assert keywords.length > 0 : "Should have at least one keyword";
         assert tasks != null : "Task list should be initialized";
 
-        ArrayList<Task> matchingTasks = new ArrayList<>();
-
-        for (Task task : tasks) {
-            assert task != null : "Task in list should not be null";
-            assert task.getDescription() != null : "Task description should not be null";
-
-            if (taskMatchesAnyKeyword(task, keywords)) {
-                matchingTasks.add(task);
-            }
+        if (keywords.length == 0) {
+            return new ArrayList<>();
         }
+
+        ArrayList<Task> matchingTasks = tasks.stream()
+                .filter(task -> {
+                    assert task != null : "Task in list should not be null";
+                    assert task.getDescription() != null : "Task description should not be null";
+                    return taskMatchesAnyKeyword(task, keywords);
+                })
+                .collect(Collectors.toCollection(ArrayList::new));
 
         assert matchingTasks != null : "Matching tasks list should not be null";
         return matchingTasks;
@@ -458,12 +460,7 @@ public class TaskList {
         assert keywords != null : "Keywords array should not be null";
 
         String descriptionLower = task.getDescription().toLowerCase();
-        for (String keyword : keywords) {
-            assert keyword != null : "Each keyword should not be null";
-            if (descriptionLower.contains(keyword.toLowerCase())) {
-                return true;
-            }
-        }
-        return false;
+        return Arrays.stream(keywords)
+                .anyMatch(keyword -> descriptionLower.contains(keyword.toLowerCase()));
     }
 }
