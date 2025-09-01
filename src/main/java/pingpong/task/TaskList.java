@@ -35,7 +35,12 @@ public class TaskList {
      * @param task the task to add
      */
     public void addTask(Task task) {
+        assert task != null : "Task to be added should not be null";
+        assert tasks != null : "Task list should be initialized";
+
         tasks.add(task);
+
+        assert tasks.contains(task) : "Task should be in the list after adding";
     }
 
     /**
@@ -46,10 +51,16 @@ public class TaskList {
      * @throws PingpongException if the index is invalid
      */
     public Task deleteTask(int index) throws PingpongException {
+        assert index >= 0 : "Index should not be negative";
+        assert tasks != null : "Task list should be initialized";
+
         if (index < 0 || index >= tasks.size()) {
             throw new PingpongException("Task number " + (index + 1) + " does not exist.");
         }
-        return tasks.remove(index);
+        Task deletedTask = tasks.remove(index);
+
+        assert deletedTask != null : "Deleted task should not be null";
+        return deletedTask;
     }
 
     /**
@@ -60,11 +71,16 @@ public class TaskList {
      * @throws PingpongException if the index is invalid
      */
     public Task markTask(int index) throws PingpongException {
+        assert index >= 0 : "Index should not be negative";
+        assert tasks != null : "Task list should be initialized";
+
         if (index < 0 || index >= tasks.size()) {
             throw new PingpongException("Task number " + (index + 1) + " does not exist.");
         }
         Task task = tasks.get(index);
         task.markAsDone();
+
+        assert task.isDone() : "Task should be marked as done after marking";
         return task;
     }
 
