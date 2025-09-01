@@ -18,6 +18,8 @@ public class TaskList {
      */
     public TaskList() {
         this.tasks = new ArrayList<>();
+        assert tasks != null : "Task list should be initialized";
+        assert tasks.isEmpty() : "New task list should be empty";
     }
 
     /**
@@ -26,7 +28,9 @@ public class TaskList {
      * @param tasks the initial list of tasks
      */
     public TaskList(ArrayList<Task> tasks) {
+        assert tasks != null : "Input task list should not be null";
         this.tasks = tasks;
+        assert this.tasks != null : "Task list should be initialized";
     }
 
     /**
@@ -35,7 +39,14 @@ public class TaskList {
      * @param task the task to add
      */
     public void addTask(Task task) {
+        assert task != null : "Task to be added should not be null";
+        assert tasks != null : "Task list should be initialized";
+
+        int originalSize = tasks.size();
         tasks.add(task);
+
+        assert tasks.size() == originalSize + 1 : "Task list size should increase by 1 after adding";
+        assert tasks.contains(task) : "Task should be in the list after adding";
     }
 
     /**
@@ -46,10 +57,19 @@ public class TaskList {
      * @throws PingpongException if the index is invalid
      */
     public Task deleteTask(int index) throws PingpongException {
+        assert tasks != null : "Task list should be initialized";
+        assert index >= 0 : "Index should not be negative";
+
         if (index < 0 || index >= tasks.size()) {
             throw new PingpongException("Task number " + (index + 1) + " does not exist.");
         }
-        return tasks.remove(index);
+
+        int originalSize = tasks.size();
+        Task deletedTask = tasks.remove(index);
+
+        assert deletedTask != null : "Deleted task should not be null";
+        assert tasks.size() == originalSize - 1 : "Task list size should decrease by 1 after deletion";
+        return deletedTask;
     }
 
     /**
@@ -60,11 +80,20 @@ public class TaskList {
      * @throws PingpongException if the index is invalid
      */
     public Task markTask(int index) throws PingpongException {
+        assert tasks != null : "Task list should be initialized";
+        assert index >= 0 : "Index should not be negative";
+
         if (index < 0 || index >= tasks.size()) {
             throw new PingpongException("Task number " + (index + 1) + " does not exist.");
         }
+
         Task task = tasks.get(index);
+        assert task != null : "Retrieved task should not be null";
+
+        boolean wasMarked = task.isDone();
         task.markAsDone();
+
+        assert task.isDone() : "Task should be marked as done after marking";
         return task;
     }
 
@@ -76,10 +105,17 @@ public class TaskList {
      * @throws PingpongException if any index is invalid
      */
     public ArrayList<Task> markTasks(int... indices) throws PingpongException {
+        assert tasks != null : "Task list should be initialized";
+        assert indices != null : "Indices array should not be null";
+        assert indices.length > 0 : "Should have at least one index to mark";
+
         ArrayList<Task> markedTasks = new ArrayList<>();
         for (int index : indices) {
-            markedTasks.add(markTask(index));
+            Task markedTask = markTask(index);
+            markedTasks.add(markedTask);
         }
+
+        assert markedTasks.size() == indices.length : "Number of marked tasks should match number of indices";
         return markedTasks;
     }
 
@@ -91,11 +127,19 @@ public class TaskList {
      * @throws PingpongException if the index is invalid
      */
     public Task unmarkTask(int index) throws PingpongException {
+        assert tasks != null : "Task list should be initialized";
+        assert index >= 0 : "Index should not be negative";
+
         if (index < 0 || index >= tasks.size()) {
             throw new PingpongException("Task number " + (index + 1) + " does not exist.");
         }
+
         Task task = tasks.get(index);
+        assert task != null : "Retrieved task should not be null";
+
         task.markAsUndone();
+
+        assert !task.isDone() : "Task should be unmarked after unmarking";
         return task;
     }
 
@@ -107,10 +151,17 @@ public class TaskList {
      * @throws PingpongException if any index is invalid
      */
     public ArrayList<Task> unmarkTasks(int... indices) throws PingpongException {
+        assert tasks != null : "Task list should be initialized";
+        assert indices != null : "Indices array should not be null";
+        assert indices.length > 0 : "Should have at least one index to unmark";
+
         ArrayList<Task> unmarkedTasks = new ArrayList<>();
         for (int index : indices) {
-            unmarkedTasks.add(unmarkTask(index));
+            Task unmarkedTask = unmarkTask(index);
+            unmarkedTasks.add(unmarkedTask);
         }
+
+        assert unmarkedTasks.size() == indices.length : "Number of unmarked tasks should match number of indices";
         return unmarkedTasks;
     }
 
@@ -122,10 +173,16 @@ public class TaskList {
      * @throws PingpongException if the index is invalid
      */
     public Task getTask(int index) throws PingpongException {
+        assert tasks != null : "Task list should be initialized";
+        assert index >= 0 : "Index should not be negative";
+
         if (index < 0 || index >= tasks.size()) {
             throw new PingpongException("Task number " + (index + 1) + " does not exist.");
         }
-        return tasks.get(index);
+
+        Task task = tasks.get(index);
+        assert task != null : "Retrieved task should not be null";
+        return task;
     }
 
     /**
@@ -134,6 +191,7 @@ public class TaskList {
      * @return the complete list of tasks
      */
     public ArrayList<Task> getAllTasks() {
+        assert tasks != null : "Task list should be initialized";
         return tasks;
     }
 
@@ -143,7 +201,10 @@ public class TaskList {
      * @return the size of the task list
      */
     public int size() {
-        return tasks.size();
+        assert tasks != null : "Task list should be initialized";
+        int size = tasks.size();
+        assert size >= 0 : "Task list size should not be negative";
+        return size;
     }
 
     /**
@@ -153,8 +214,15 @@ public class TaskList {
      * @return the created Todo task
      */
     public Task addTodo(String description) {
+        assert description != null : "Todo description should not be null";
+        assert !description.trim().isEmpty() : "Todo description should not be empty";
+        assert tasks != null : "Task list should be initialized";
+
         Task task = new Todo(description);
         addTask(task);
+
+        assert task != null : "Created todo should not be null";
+        assert tasks.contains(task) : "Todo should be in task list after adding";
         return task;
     }
 
@@ -165,11 +233,18 @@ public class TaskList {
      * @return a list of created Todo tasks
      */
     public ArrayList<Task> addTodos(String... descriptions) {
+        assert descriptions != null : "Descriptions array should not be null";
+        assert descriptions.length > 0 : "Should have at least one description";
+        assert tasks != null : "Task list should be initialized";
+
         ArrayList<Task> createdTasks = new ArrayList<>();
         for (String description : descriptions) {
+            assert description != null : "Each description should not be null";
             Task task = addTodo(description);
             createdTasks.add(task);
         }
+
+        assert createdTasks.size() == descriptions.length : "Number of created tasks should match descriptions";
         return createdTasks;
     }
 
@@ -181,8 +256,16 @@ public class TaskList {
      * @return the created Deadline task
      */
     public Task addDeadline(String description, LocalDate by) {
+        assert description != null : "Deadline description should not be null";
+        assert !description.trim().isEmpty() : "Deadline description should not be empty";
+        assert by != null : "Deadline date should not be null";
+        assert tasks != null : "Task list should be initialized";
+
         Task task = new Deadline(description, by);
         addTask(task);
+
+        assert task != null : "Created deadline should not be null";
+        assert tasks.contains(task) : "Deadline should be in task list after adding";
         return task;
     }
 
@@ -195,8 +278,18 @@ public class TaskList {
      * @return the created Event task
      */
     public Task addEvent(String description, LocalDateTime start, LocalDateTime end) {
+        assert description != null : "Event description should not be null";
+        assert !description.trim().isEmpty() : "Event description should not be empty";
+        assert start != null : "Event start time should not be null";
+        assert end != null : "Event end time should not be null";
+        assert !start.isAfter(end) : "Event start time should not be after end time";
+        assert tasks != null : "Task list should be initialized";
+
         Task task = new Event(description, start, end);
         addTask(task);
+
+        assert task != null : "Created event should not be null";
+        assert tasks.contains(task) : "Event should be in task list after adding";
         return task;
     }
 
@@ -210,18 +303,26 @@ public class TaskList {
      * @return a list of tasks occurring on the specified date
      */
     public ArrayList<Task> findTasksOnDate(LocalDate targetDate) {
+        assert targetDate != null : "Target date should not be null";
+        assert tasks != null : "Task list should be initialized";
+
         ArrayList<Task> matchingTasks = new ArrayList<>();
 
         for (Task task : tasks) {
+            assert task != null : "Task in list should not be null";
             boolean matches = false;
 
             if (task instanceof Deadline) {
                 Deadline deadline = (Deadline) task;
+                assert deadline.getBy() != null : "Deadline date should not be null";
                 if (deadline.getBy().equals(targetDate)) {
                     matches = true;
                 }
             } else if (task instanceof Event) {
                 Event event = (Event) task;
+                assert event.getStart() != null : "Event start time should not be null";
+                assert event.getEnd() != null : "Event end time should not be null";
+
                 LocalDate startDate = event.getStart().toLocalDate();
                 LocalDate endDate = event.getEnd().toLocalDate();
                 if (!targetDate.isBefore(startDate) && !targetDate.isAfter(endDate)) {
@@ -233,6 +334,8 @@ public class TaskList {
                 matchingTasks.add(task);
             }
         }
+
+        assert matchingTasks != null : "Matching tasks list should not be null";
         return matchingTasks;
     }
 
@@ -244,14 +347,23 @@ public class TaskList {
      * @return a list of tasks whose descriptions contain the keyword
      */
     public ArrayList<Task> findTasksByKeyword(String keyword) {
+        assert keyword != null : "Keyword should not be null";
+        assert !keyword.trim().isEmpty() : "Keyword should not be empty";
+        assert tasks != null : "Task list should be initialized";
+
         ArrayList<Task> matchingTasks = new ArrayList<>();
         String keywordLower = keyword.toLowerCase();
 
         for (Task task : tasks) {
+            assert task != null : "Task in list should not be null";
+            assert task.getDescription() != null : "Task description should not be null";
+
             if (task.getDescription().toLowerCase().contains(keywordLower)) {
                 matchingTasks.add(task);
             }
         }
+
+        assert matchingTasks != null : "Matching tasks list should not be null";
         return matchingTasks;
     }
 
@@ -263,11 +375,19 @@ public class TaskList {
      * @return a list of tasks whose descriptions contain any of the keywords
      */
     public ArrayList<Task> findTasksByKeywords(String... keywords) {
+        assert keywords != null : "Keywords array should not be null";
+        assert keywords.length > 0 : "Should have at least one keyword";
+        assert tasks != null : "Task list should be initialized";
+
         ArrayList<Task> matchingTasks = new ArrayList<>();
 
         for (Task task : tasks) {
+            assert task != null : "Task in list should not be null";
+            assert task.getDescription() != null : "Task description should not be null";
+
             String descriptionLower = task.getDescription().toLowerCase();
             for (String keyword : keywords) {
+                assert keyword != null : "Each keyword should not be null";
                 if (descriptionLower.contains(keyword.toLowerCase())) {
                     if (!matchingTasks.contains(task)) {
                         matchingTasks.add(task);
@@ -276,6 +396,8 @@ public class TaskList {
                 }
             }
         }
+
+        assert matchingTasks != null : "Matching tasks list should not be null";
         return matchingTasks;
     }
 }
