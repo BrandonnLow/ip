@@ -11,6 +11,8 @@ import pingpong.PingpongException;
  * Acts as the main container for all tasks in the Pingpong application.
  */
 public class TaskList {
+    private static final String TASK_NOT_EXISTS_ERROR = "Task number %d does not exist.";
+
     private ArrayList<Task> tasks;
 
     /**
@@ -46,9 +48,7 @@ public class TaskList {
      * @throws PingpongException if the index is invalid
      */
     public Task deleteTask(int index) throws PingpongException {
-        if (index < 0 || index >= tasks.size()) {
-            throw new PingpongException("Task number " + (index + 1) + " does not exist.");
-        }
+        validateTaskIndex(index);
         return tasks.remove(index);
     }
 
@@ -60,9 +60,7 @@ public class TaskList {
      * @throws PingpongException if the index is invalid
      */
     public Task markTask(int index) throws PingpongException {
-        if (index < 0 || index >= tasks.size()) {
-            throw new PingpongException("Task number " + (index + 1) + " does not exist.");
-        }
+        validateTaskIndex(index);
         Task task = tasks.get(index);
         task.markAsDone();
         return task;
@@ -91,9 +89,7 @@ public class TaskList {
      * @throws PingpongException if the index is invalid
      */
     public Task unmarkTask(int index) throws PingpongException {
-        if (index < 0 || index >= tasks.size()) {
-            throw new PingpongException("Task number " + (index + 1) + " does not exist.");
-        }
+        validateTaskIndex(index);
         Task task = tasks.get(index);
         task.markAsUndone();
         return task;
@@ -122,10 +118,20 @@ public class TaskList {
      * @throws PingpongException if the index is invalid
      */
     public Task getTask(int index) throws PingpongException {
-        if (index < 0 || index >= tasks.size()) {
-            throw new PingpongException("Task number " + (index + 1) + " does not exist.");
-        }
+        validateTaskIndex(index);
         return tasks.get(index);
+    }
+
+    /**
+     * Validates that the given index is within valid range.
+     *
+     * @param index the index to validate
+     * @throws PingpongException if index is out of bounds
+     */
+    private void validateTaskIndex(int index) throws PingpongException {
+        if (index < 0 || index >= tasks.size()) {
+            throw new PingpongException(String.format(TASK_NOT_EXISTS_ERROR, index + 1));
+        }
     }
 
     /**
@@ -213,27 +219,51 @@ public class TaskList {
         ArrayList<Task> matchingTasks = new ArrayList<>();
 
         for (Task task : tasks) {
-            boolean matches = false;
-
-            if (task instanceof Deadline) {
-                Deadline deadline = (Deadline) task;
-                if (deadline.getBy().equals(targetDate)) {
-                    matches = true;
-                }
-            } else if (task instanceof Event) {
-                Event event = (Event) task;
-                LocalDate startDate = event.getStart().toLocalDate();
-                LocalDate endDate = event.getEnd().toLocalDate();
-                if (!targetDate.isBefore(startDate) && !targetDate.isAfter(endDate)) {
-                    matches = true;
-                }
-            }
-
-            if (matches) {
+            if (isTaskOnDate(task, targetDate)) {
                 matchingTasks.add(task);
             }
         }
         return matchingTasks;
+    }
+
+    /**
+     * Checks if a task occurs on the specified date.
+     *
+     * @param task the task to check
+     * @param targetDate the target date
+     * @return true if task occurs on the date, false otherwise
+     */
+    private boolean isTaskOnDate(Task task, LocalDate targetDate) {
+        if (task instanceof Deadline) {
+            return isDeadlineOnDate((Deadline) task, targetDate);
+        } else if (task instanceof Event) {
+            return isEventOnDate((Event) task, targetDate);
+        }
+        return false;
+    }
+
+    /**
+     * Checks if a deadline task occurs on the specified date.
+     *
+     * @param deadline the deadline task
+     * @param targetDate the target date
+     * @return true if deadline is on the date
+     */
+    private boolean isDeadlineOnDate(Deadline deadline, LocalDate targetDate) {
+        return deadline.getBy().equals(targetDate);
+    }
+
+    /**
+     * Checks if an event task occurs on the specified date.
+     *
+     * @param event the event task
+     * @param targetDate the target date
+     * @return true if date falls within event period
+     */
+    private boolean isEventOnDate(Event event, LocalDate targetDate) {
+        LocalDate startDate = event.getStart().toLocalDate();
+        LocalDate endDate = event.getEnd().toLocalDate();
+        return !targetDate.isBefore(startDate) && !targetDate.isAfter(endDate);
     }
 
     /**
@@ -248,11 +278,22 @@ public class TaskList {
         String keywordLower = keyword.toLowerCase();
 
         for (Task task : tasks) {
-            if (task.getDescription().toLowerCase().contains(keywordLower)) {
+            if (containsKeyword(task, keywordLower)) {
                 matchingTasks.add(task);
             }
         }
         return matchingTasks;
+    }
+
+    /**
+     * Checks if a task's description contains the specified keyword.
+     *
+     * @param task the task to check
+     * @param keywordLower the keyword in lowercase
+     * @return true if description contains keyword
+     */
+    private boolean containsKeyword(Task task, String keywordLower) {
+        return task.getDescription().toLowerCase().contains(keywordLower);
     }
 
     /**
@@ -266,16 +307,27 @@ public class TaskList {
         ArrayList<Task> matchingTasks = new ArrayList<>();
 
         for (Task task : tasks) {
-            String descriptionLower = task.getDescription().toLowerCase();
-            for (String keyword : keywords) {
-                if (descriptionLower.contains(keyword.toLowerCase())) {
-                    if (!matchingTasks.contains(task)) {
-                        matchingTasks.add(task);
-                    }
-                    break; // Found a match, no need to check other keywords for this task
-                }
+            if (taskMatchesAnyKeyword(task, keywords)) {
+                matchingTasks.add(task);
             }
         }
         return matchingTasks;
+    }
+
+    /**
+     * Checks if a task matches any of the provided keywords.
+     *
+     * @param task the task to check
+     * @param keywords the keywords to match against
+     * @return true if task matches any keyword
+     */
+    private boolean taskMatchesAnyKeyword(Task task, String... keywords) {
+        String descriptionLower = task.getDescription().toLowerCase();
+        for (String keyword : keywords) {
+            if (descriptionLower.contains(keyword.toLowerCase())) {
+                return true;
+            }
+        }
+        return false;
     }
 }
