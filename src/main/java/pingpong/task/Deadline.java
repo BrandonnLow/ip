@@ -17,7 +17,14 @@ public class Deadline extends Task {
      */
     public Deadline(String deadline, LocalDate by) {
         super(deadline, TaskType.DEADLINE);
+
+        assert by != null : "Deadline date should not be null";
+        assert !by.isBefore(LocalDate.of(1900, 1, 1)) : "Deadline date should be reasonable (after 1900)";
+
         this.by = by;
+
+        assert this.by != null : "Deadline date should be set";
+        assert this.getType() == TaskType.DEADLINE : "Task type should be DEADLINE";
     }
 
     /**
@@ -26,6 +33,7 @@ public class Deadline extends Task {
      * @return the deadline date
      */
     public LocalDate getBy() {
+        assert this.by != null : "Deadline date should not be null";
         return this.by;
     }
 
@@ -35,7 +43,14 @@ public class Deadline extends Task {
      * @return the deadline date formatted as "MMM d yyyy"
      */
     private String getByString() {
-        return by.format(DateTimeFormatter.ofPattern("MMM d yyyy"));
+        assert by != null : "Deadline date should not be null";
+
+        String formatted = by.format(DateTimeFormatter.ofPattern("MMM d yyyy"));
+
+        assert formatted != null : "Formatted date string should not be null";
+        assert !formatted.trim().isEmpty() : "Formatted date string should not be empty";
+
+        return formatted;
     }
 
     /**
@@ -44,7 +59,15 @@ public class Deadline extends Task {
      * @return the deadline date in ISO format for file storage
      */
     public String getByForFile() {
-        return by.format(DateTimeFormatter.ISO_LOCAL_DATE);
+        assert by != null : "Deadline date should not be null";
+
+        String formatted = by.format(DateTimeFormatter.ISO_LOCAL_DATE);
+
+        assert formatted != null : "Formatted date string should not be null";
+        assert !formatted.trim().isEmpty() : "Formatted date string should not be empty";
+        assert formatted.matches("\\d{4}-\\d{2}-\\d{2}") : "Date should be in ISO format";
+
+        return formatted;
     }
 
     /**
@@ -54,6 +77,20 @@ public class Deadline extends Task {
      */
     @Override
     public String toString() {
-        return super.toString() + " (by: " + this.getByString() + ")";
+        assert this.by != null : "Deadline date should not be null";
+
+        String baseString = super.toString();
+        String byString = this.getByString();
+
+        assert baseString != null : "Base task string should not be null";
+        assert byString != null : "Deadline date string should not be null";
+
+        String result = baseString + " (by: " + byString + ")";
+
+        assert result != null : "Result string should not be null";
+        assert result.contains("by:") : "Result should contain deadline indicator";
+        assert result.contains(byString) : "Result should contain formatted deadline date";
+
+        return result;
     }
 }
