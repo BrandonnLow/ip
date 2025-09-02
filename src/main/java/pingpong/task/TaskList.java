@@ -463,4 +463,191 @@ public class TaskList {
         return Arrays.stream(keywords)
                 .anyMatch(keyword -> descriptionLower.contains(keyword.toLowerCase()));
     }
+
+
+    /**
+     * Updates a task at the specified index with new field values.
+     * Only non-null parameters will be updated.
+     *
+     * @param index the 0-based index of the task to update
+     * @param newDescription the new description (null to keep current)
+     * @param newDeadline the new deadline date (null to keep current, only for Deadline tasks)
+     * @param newStart the new start time (null to keep current, only for Event tasks)
+     * @param newEnd the new end time (null to keep current, only for Event tasks)
+     * @return the updated task
+     * @throws PingpongException if the index is invalid or update is not supported for the task type
+     */
+    public Task updateTask(int index, String newDescription, LocalDate newDeadline,
+                           LocalDateTime newStart, LocalDateTime newEnd) throws PingpongException {
+        assert tasks != null : "Task list should be initialized";
+
+        validateTaskIndex(index);
+
+        assert index >= 0 : "Index should not be negative";
+
+        Task originalTask = tasks.get(index);
+        assert originalTask != null : "Retrieved task should not be null";
+
+        // Create new task based on the original task type with updated fields
+        Task updatedTask = createUpdatedTask(originalTask, newDescription, newDeadline, newStart, newEnd);
+        assert updatedTask != null : "Updated task should not be null";
+
+        // Replace the task in the list
+        tasks.set(index, updatedTask);
+
+        assert tasks.get(index) == updatedTask : "Task should be replaced in the list";
+        return updatedTask;
+    }
+
+    /**
+     * Creates a new task with updated fields based on the original task.
+     *
+     * @param originalTask the original task to base the update on
+     * @param newDescription the new description (null to keep current)
+     * @param newDeadline the new deadline date (null to keep current)
+     * @param newStart the new start time (null to keep current)
+     * @param newEnd the new end time (null to keep current)
+     * @return the updated task
+     * @throws PingpongException if update is not supported for the task type
+     */
+    private Task createUpdatedTask(Task originalTask, String newDescription, LocalDate newDeadline,
+                                   LocalDateTime newStart, LocalDateTime newEnd) throws PingpongException {
+        assert originalTask != null : "Original task should not be null";
+
+        switch (originalTask.getType()) {
+        case TODO:
+            return createUpdatedTodo(originalTask, newDescription, newDeadline, newStart, newEnd);
+        case DEADLINE:
+            return createUpdatedDeadline(originalTask, newDescription, newDeadline, newStart, newEnd);
+        case Event:
+            return createUpdatedEvent(originalTask, newDescription, newDeadline, newStart, newEnd);
+        default:
+            throw new PingpongException("Unknown task type cannot be updated.");
+        }
+    }
+
+    /**
+     * Creates an updated Todo task.
+     *
+     * @param originalTask the original Todo task
+     * @param newDescription the new description (null to keep current)
+     * @param newDeadline ignored for Todo tasks
+     * @param newStart ignored for Todo tasks
+     * @param newEnd ignored for Todo tasks
+     * @return the updated Todo task
+     * @throws PingpongException if deadline or time fields are specified for Todo
+     */
+    private Task createUpdatedTodo(Task originalTask, String newDescription, LocalDate newDeadline,
+                                   LocalDateTime newStart, LocalDateTime newEnd) throws PingpongException {
+        assert originalTask != null : "Original task should not be null";
+        assert originalTask.getType() == TaskType.TODO : "Task should be a Todo";
+
+        // Validate that time-related fields are not specified for Todo tasks
+        if (newDeadline != null) {
+            throw new PingpongException("Cannot set deadline for Todo tasks. "
+                    + "Use 'deadline' command to create a Deadline task.");
+        }
+        if (newStart != null || newEnd != null) {
+            throw new PingpongException("Cannot set times for Todo tasks. "
+                    + "Use 'event' command to create an Event task.");
+        }
+
+        String description = newDescription != null ? newDescription : originalTask.getDescription();
+        assert description != null : "Description should not be null";
+
+        Task updatedTask = new Todo(description);
+
+        if (originalTask.isDone()) {
+            updatedTask.markAsDone();
+        }
+
+        assert updatedTask != null : "Updated todo should not be null";
+        return updatedTask;
+    }
+
+    /**
+     * Creates an updated Deadline task.
+     *
+     * @param originalTask the original Deadline task
+     * @param newDescription the new description (null to keep current)
+     * @param newDeadline the new deadline date (null to keep current)
+     * @param newStart ignored for Deadline tasks
+     * @param newEnd ignored for Deadline tasks
+     * @return the updated Deadline task
+     * @throws PingpongException if event time fields are specified for Deadline
+     */
+    private Task createUpdatedDeadline(Task originalTask, String newDescription, LocalDate newDeadline,
+                                       LocalDateTime newStart, LocalDateTime newEnd) throws PingpongException {
+        assert originalTask != null : "Original task should not be null";
+        assert originalTask.getType() == TaskType.DEADLINE : "Task should be a Deadline";
+        assert originalTask instanceof Deadline : "Task should be instance of Deadline";
+
+        // Validate that event time fields are not specified for Deadline tasks
+        if (newStart != null || newEnd != null) {
+            throw new PingpongException("Cannot set start/end times for Deadline tasks."
+                    + "Use 'event' command to create an Event task.");
+        }
+
+        Deadline originalDeadline = (Deadline) originalTask;
+        String description = newDescription != null ? newDescription : originalTask.getDescription();
+        LocalDate by = newDeadline != null ? newDeadline : originalDeadline.getBy();
+
+        assert description != null : "Description should not be null";
+        assert by != null : "Deadline date should not be null";
+
+        Task updatedTask = new Deadline(description, by);
+
+        if (originalTask.isDone()) {
+            updatedTask.markAsDone();
+        }
+
+        assert updatedTask != null : "Updated deadline should not be null";
+        return updatedTask;
+    }
+
+    /**
+     * Creates an updated Event task.
+     *
+     * @param originalTask the original Event task
+     * @param newDescription the new description (null to keep current)
+     * @param newDeadline ignored for Event tasks
+     * @param newStart the new start time (null to keep current)
+     * @param newEnd the new end time (null to keep current)
+     * @return the updated Event task
+     * @throws PingpongException if deadline field is specified for Event
+     */
+    private Task createUpdatedEvent(Task originalTask, String newDescription, LocalDate newDeadline,
+                                    LocalDateTime newStart, LocalDateTime newEnd) throws PingpongException {
+        assert originalTask != null : "Original task should not be null";
+        assert originalTask.getType() == TaskType.Event : "Task should be an Event";
+        assert originalTask instanceof Event : "Task should be instance of Event";
+
+        if (newDeadline != null) {
+            throw new PingpongException("Cannot set deadline for Event tasks. "
+                    + "Use 'deadline' command to create a Deadline task.");
+        }
+
+        Event originalEvent = (Event) originalTask;
+        String description = newDescription != null ? newDescription : originalTask.getDescription();
+        LocalDateTime start = newStart != null ? newStart : originalEvent.getStart();
+        LocalDateTime end = newEnd != null ? newEnd : originalEvent.getEnd();
+
+        assert description != null : "Description should not be null";
+        assert start != null : "Start time should not be null";
+        assert end != null : "End time should not be null";
+
+        // Validate that start time is not after end time
+        if (start.isAfter(end)) {
+            throw new PingpongException("Event start time cannot be after end time.");
+        }
+
+        Task updatedTask = new Event(description, start, end);
+
+        if (originalTask.isDone()) {
+            updatedTask.markAsDone();
+        }
+
+        assert updatedTask != null : "Updated event should not be null";
+        return updatedTask;
+    }
 }

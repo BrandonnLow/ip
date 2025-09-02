@@ -167,6 +167,26 @@ public class MockUi extends Ui {
         }
     }
 
+    @Override
+    public void showTaskUpdated(Task originalTask, Task updatedTask) {
+        output.append(" Got it. I've updated this task:\n")
+                .append("   From: ").append(originalTask).append("\n")
+                .append("   To:   ").append(updatedTask);
+    }
+
+    @Override
+    public void showTasksUpdated(Task[] originalTasks, Task[] updatedTasks) {
+        if (originalTasks.length == 1) {
+            showTaskUpdated(originalTasks[0], updatedTasks[0]);
+        } else {
+            output.append(" Got it. I've updated these ").append(originalTasks.length).append(" tasks:\n");
+            for (int i = 0; i < originalTasks.length; i++) {
+                output.append("   ").append(i + 1).append(". From: ").append(originalTasks[i]).append("\n");
+                output.append("      To:   ").append(updatedTasks[i]).append("\n");
+            }
+        }
+    }
+
     // Override unused methods from parent class
     @Override
     public String readCommand() {

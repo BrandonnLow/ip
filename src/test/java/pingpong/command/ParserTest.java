@@ -300,4 +300,179 @@ public class ParserTest {
 
         assertTrue(command instanceof AddMultipleCommand);
     }
+
+    @Test
+    public void parse_updateSingleDescription_success() throws PingpongException {
+        Command command = Parser.parse("update 1 /desc new description");
+
+        assertTrue(command instanceof UpdateCommand);
+    }
+
+    @Test
+    public void parse_updateSingleDeadline_success() throws PingpongException {
+        Command command = Parser.parse("update 1 /by 2025-09-15");
+
+        assertTrue(command instanceof UpdateCommand);
+    }
+
+    @Test
+    public void parse_updateSingleEventTimes_success() throws PingpongException {
+        Command command = Parser.parse("update 1 /from 2025-09-10 1400 /to 2025-09-10 1600");
+
+        assertTrue(command instanceof UpdateCommand);
+    }
+
+    @Test
+    public void parse_updateMultipleFields_success() throws PingpongException {
+        Command command = Parser.parse("update 1 /desc team meeting /from 2025-09-12 0900 /to 2025-09-12 1000");
+
+        assertTrue(command instanceof UpdateCommand);
+    }
+
+    @Test
+    public void parse_updateDescriptionDeadline_success() throws PingpongException {
+        Command command = Parser.parse("update 1 /desc new task /by 2025-09-15");
+
+        assertTrue(command instanceof UpdateCommand);
+    }
+
+    @Test
+    public void parse_updateMultipleTasks_success() throws PingpongException {
+        Command command = Parser.parse("update 1 2 3 /desc updated description");
+
+        assertTrue(command instanceof UpdateMultipleCommand);
+    }
+
+    @Test
+    public void parse_updateTwoTasks_success() throws PingpongException {
+        Command command = Parser.parse("update 1 5 /by 2025-09-20");
+
+        assertTrue(command instanceof UpdateMultipleCommand);
+    }
+
+    @Test
+    public void parse_updateAllEventFields_success() throws PingpongException {
+        Command command = Parser.parse("update 1 /desc updated meeting /from 2025-09-12 1000 /to 2025-09-12 1200");
+
+        assertTrue(command instanceof UpdateCommand);
+    }
+
+    @Test
+    public void parse_updateEmpty_throwsException() {
+        assertThrows(PingpongException.class, () -> Parser.parse("update"));
+        assertThrows(PingpongException.class, () -> Parser.parse("update "));
+    }
+
+    @Test
+    public void parse_updateNoFields_throwsException() {
+        assertThrows(PingpongException.class, () -> Parser.parse("update 1"));
+        assertThrows(PingpongException.class, () -> Parser.parse("update 1 2 3"));
+    }
+
+    @Test
+    public void parse_updateInvalidTaskNumber_throwsException() {
+        assertThrows(PingpongException.class, () -> Parser.parse("update abc /desc new description"));
+        assertThrows(PingpongException.class, () -> Parser.parse("update 0 /desc new description"));
+        assertThrows(PingpongException.class, () -> Parser.parse("update -1 /desc new description"));
+    }
+
+    @Test
+    public void parse_updateInvalidDateFormat_throwsException() {
+        assertThrows(PingpongException.class, () -> Parser.parse("update 1 /by 25-12-2024"));
+        assertThrows(PingpongException.class, () -> Parser.parse("update 1 /by invalid-date"));
+    }
+
+    @Test
+    public void parse_updateInvalidTimeFormat_throwsException() {
+        assertThrows(PingpongException.class, () -> Parser.parse("update 1 /from invalid-time /to 2025-09-10 1600"));
+        assertThrows(PingpongException.class, () -> Parser.parse("update 1 /from 2025-09-10 1400 /to invalid-time"));
+    }
+
+    @Test
+    public void parse_updateStartAfterEnd_throwsException() {
+        assertThrows(PingpongException.class, () -> Parser.parse("update 1 /from 2025-09-10 1600 /to 2025-09-10 1400"));
+    }
+
+    @Test
+    public void parse_updateInvalidNumbers_throwsException() {
+        assertThrows(PingpongException.class, () -> Parser.parse("update 1 abc 3 /desc new description"));
+        assertThrows(PingpongException.class, () -> Parser.parse("update 1 0 3 /desc new description"));
+        assertThrows(PingpongException.class, () -> Parser.parse("update -1 2 /desc new description"));
+    }
+
+    @Test
+    public void parse_updateSingleVsMultiple_returnsCorrectCommandType() throws PingpongException {
+        Command singleCommand = Parser.parse("update 1 /desc new description");
+        Command multipleCommand = Parser.parse("update 1 2 /desc new description");
+
+        assertTrue(singleCommand instanceof UpdateCommand);
+        assertTrue(multipleCommand instanceof UpdateMultipleCommand);
+    }
+
+    @Test
+    public void parse_updateDifferentTimeFormats_success() throws PingpongException {
+        // Test HHmm format
+        Command command1 = Parser.parse("update 1 /from 2025-09-10 1400 /to 2025-09-10 1600");
+        assertTrue(command1 instanceof UpdateCommand);
+
+        // Test HH:mm format
+        Command command2 = Parser.parse("update 1 /from 2025-09-10 14:00 /to 2025-09-10 16:00");
+        assertTrue(command2 instanceof UpdateCommand);
+
+        // Test date only format
+        Command command3 = Parser.parse("update 1 /from 2025-09-10 /to 2025-09-11");
+        assertTrue(command3 instanceof UpdateCommand);
+    }
+
+    @Test
+    public void parse_updateFieldOrderIndependent_success() throws PingpongException {
+        Command command1 = Parser.parse("update 1 /desc meeting /by 2025-09-15");
+        Command command2 = Parser.parse("update 1 /by 2025-09-15 /desc meeting");
+
+        assertTrue(command1 instanceof UpdateCommand);
+        assertTrue(command2 instanceof UpdateCommand);
+    }
+
+    @Test
+    public void parse_updateEventFieldsOrder_success() throws PingpongException {
+        Command command1 = Parser.parse("update 1 /desc meeting /from 2025-09-10 1400 /to 2025-09-10 1600");
+        Command command2 = Parser.parse("update 1 /to 2025-09-10 1600 /desc meeting /from 2025-09-10 1400");
+
+        assertTrue(command1 instanceof UpdateCommand);
+        assertTrue(command2 instanceof UpdateCommand);
+    }
+
+    @Test
+    public void parse_updateOnlyStartTime_success() throws PingpongException {
+        Command command = Parser.parse("update 1 /from 2025-09-10 1500");
+
+        assertTrue(command instanceof UpdateCommand);
+    }
+
+    @Test
+    public void parse_updateOnlyEndTime_success() throws PingpongException {
+        Command command = Parser.parse("update 1 /to 2025-09-10 1700");
+
+        assertTrue(command instanceof UpdateCommand);
+    }
+
+    @Test
+    public void parse_updateEmptyDescription_throwsException() {
+        assertThrows(PingpongException.class, () -> Parser.parse("update 1 /desc"));
+        assertThrows(PingpongException.class, () -> Parser.parse("update 1 /desc "));
+    }
+
+    @Test
+    public void parse_updateEmptyDeadline_throwsException() {
+        assertThrows(PingpongException.class, () -> Parser.parse("update 1 /by"));
+        assertThrows(PingpongException.class, () -> Parser.parse("update 1 /by "));
+    }
+
+    @Test
+    public void parse_updateEmptyTimes_throwsException() {
+        assertThrows(PingpongException.class, () -> Parser.parse("update 1 /from"));
+        assertThrows(PingpongException.class, () -> Parser.parse("update 1 /to"));
+        assertThrows(PingpongException.class, () -> Parser.parse("update 1 /from "));
+        assertThrows(PingpongException.class, () -> Parser.parse("update 1 /to "));
+    }
 }
