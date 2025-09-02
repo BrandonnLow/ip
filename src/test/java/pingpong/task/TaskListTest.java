@@ -480,4 +480,295 @@ public class TaskListTest {
         ArrayList<Task> foundTasks = taskList.findTasksByKeywords("Task");
         assertEquals(4, foundTasks.size());
     }
+
+    @Test
+    public void updateTask_todoDescription_success() throws PingpongException {
+        taskList.addTodo("Original description");
+
+        Task updatedTask = taskList.updateTask(0, "Updated description", null, null, null);
+
+        assertEquals("Updated description", updatedTask.getDescription());
+        assertEquals(TaskType.TODO, updatedTask.getType());
+        assertFalse(updatedTask.isDone());
+        assertEquals(1, taskList.size());
+    }
+
+    @Test
+    public void updateTask_deadlineDescription_success() throws PingpongException {
+        LocalDate originalDate = LocalDate.of(2025, 9, 10);
+        taskList.addDeadline("Original task", originalDate);
+
+        Task updatedTask = taskList.updateTask(0, "Updated task", null, null, null);
+
+        assertEquals("Updated task", updatedTask.getDescription());
+        assertEquals(TaskType.DEADLINE, updatedTask.getType());
+        assertTrue(updatedTask instanceof Deadline);
+
+        Deadline updatedDeadline = (Deadline) updatedTask;
+        assertEquals(originalDate, updatedDeadline.getBy());
+    }
+
+    @Test
+    public void updateTask_deadlineDate_success() throws PingpongException {
+        LocalDate originalDate = LocalDate.of(2025, 9, 10);
+        LocalDate newDate = LocalDate.of(2025, 9, 15);
+        taskList.addDeadline("Task description", originalDate);
+
+        Task updatedTask = taskList.updateTask(0, null, newDate, null, null);
+
+        assertEquals("Task description", updatedTask.getDescription());
+        assertEquals(TaskType.DEADLINE, updatedTask.getType());
+        assertTrue(updatedTask instanceof Deadline);
+
+        Deadline updatedDeadline = (Deadline) updatedTask;
+        assertEquals(newDate, updatedDeadline.getBy());
+    }
+
+    @Test
+    public void updateTask_eventDescription_success() throws PingpongException {
+        LocalDateTime originalStart = LocalDateTime.of(2025, 9, 10, 14, 0);
+        LocalDateTime originalEnd = LocalDateTime.of(2025, 9, 10, 16, 0);
+        taskList.addEvent("Original meeting", originalStart, originalEnd);
+
+        Task updatedTask = taskList.updateTask(0, "Updated meeting", null, null, null);
+
+        assertEquals("Updated meeting", updatedTask.getDescription());
+        assertEquals(TaskType.Event, updatedTask.getType());
+        assertTrue(updatedTask instanceof Event);
+
+        Event updatedEvent = (Event) updatedTask;
+        assertEquals(originalStart, updatedEvent.getStart());
+        assertEquals(originalEnd, updatedEvent.getEnd());
+    }
+
+    @Test
+    public void updateTask_eventTimes_success() throws PingpongException {
+        LocalDateTime originalStart = LocalDateTime.of(2025, 9, 10, 14, 0);
+        LocalDateTime originalEnd = LocalDateTime.of(2025, 9, 10, 16, 0);
+        LocalDateTime newStart = LocalDateTime.of(2025, 9, 10, 15, 0);
+        LocalDateTime newEnd = LocalDateTime.of(2025, 9, 10, 17, 0);
+
+        taskList.addEvent("Meeting", originalStart, originalEnd);
+
+        Task updatedTask = taskList.updateTask(0, null, null, newStart, newEnd);
+
+        assertEquals("Meeting", updatedTask.getDescription());
+        assertEquals(TaskType.Event, updatedTask.getType());
+        assertTrue(updatedTask instanceof Event);
+
+        Event updatedEvent = (Event) updatedTask;
+        assertEquals(newStart, updatedEvent.getStart());
+        assertEquals(newEnd, updatedEvent.getEnd());
+    }
+
+    @Test
+    public void updateTask_eventStartOnly_success() throws PingpongException {
+        LocalDateTime originalStart = LocalDateTime.of(2025, 9, 10, 14, 0);
+        LocalDateTime originalEnd = LocalDateTime.of(2025, 9, 10, 16, 0);
+        LocalDateTime newStart = LocalDateTime.of(2025, 9, 10, 15, 0);
+
+        taskList.addEvent("Meeting", originalStart, originalEnd);
+
+        Task updatedTask = taskList.updateTask(0, null, null, newStart, null);
+
+        Event updatedEvent = (Event) updatedTask;
+        assertEquals(newStart, updatedEvent.getStart());
+        assertEquals(originalEnd, updatedEvent.getEnd());
+    }
+
+    @Test
+    public void updateTask_eventEndOnly_success() throws PingpongException {
+        LocalDateTime originalStart = LocalDateTime.of(2025, 9, 10, 14, 0);
+        LocalDateTime originalEnd = LocalDateTime.of(2025, 9, 10, 16, 0);
+        LocalDateTime newEnd = LocalDateTime.of(2025, 9, 10, 17, 0);
+
+        taskList.addEvent("Meeting", originalStart, originalEnd);
+
+        Task updatedTask = taskList.updateTask(0, null, null, null, newEnd);
+
+        Event updatedEvent = (Event) updatedTask;
+        assertEquals(originalStart, updatedEvent.getStart());
+        assertEquals(newEnd, updatedEvent.getEnd());
+    }
+
+    @Test
+    public void updateTask_multipleFields_success() throws PingpongException {
+        LocalDate originalDate = LocalDate.of(2025, 9, 10);
+        LocalDate newDate = LocalDate.of(2025, 9, 15);
+        taskList.addDeadline("Original task", originalDate);
+
+        Task updatedTask = taskList.updateTask(0, "Updated task", newDate, null, null);
+
+        assertEquals("Updated task", updatedTask.getDescription());
+        assertTrue(updatedTask instanceof Deadline);
+
+        Deadline updatedDeadline = (Deadline) updatedTask;
+        assertEquals(newDate, updatedDeadline.getBy());
+    }
+
+    @Test
+    public void updateTask_preservesStatus_success() throws PingpongException {
+        taskList.addTodo("Task to update");
+        taskList.markTask(0); // Mark as done
+
+        Task updatedTask = taskList.updateTask(0, "Updated task", null, null, null);
+
+        assertTrue(updatedTask.isDone());
+        assertEquals("Updated task", updatedTask.getDescription());
+    }
+
+    @Test
+    public void updateTask_invalidIndex_throwsException() {
+        taskList.addTodo("Only task");
+
+        assertThrows(PingpongException.class, () -> taskList.updateTask(1, "New description", null, null, null));
+        assertThrows(PingpongException.class, () -> taskList.updateTask(-1, "New description", null, null, null));
+    }
+
+    @Test
+    public void updateTask_todoDeadline_throwsException() throws PingpongException {
+        taskList.addTodo("Todo task");
+        LocalDate newDate = LocalDate.of(2025, 9, 15);
+
+        assertThrows(PingpongException.class, () -> taskList.updateTask(0, null, newDate, null, null));
+    }
+
+    @Test
+    public void updateTask_todoEventTimes_throwsException() throws PingpongException {
+        taskList.addTodo("Todo task");
+        LocalDateTime newStart = LocalDateTime.of(2025, 9, 10, 14, 0);
+        LocalDateTime newEnd = LocalDateTime.of(2025, 9, 10, 16, 0);
+
+        assertThrows(PingpongException.class, () -> taskList.updateTask(0, null, null, newStart, null));
+        assertThrows(PingpongException.class, () -> taskList.updateTask(0, null, null, null, newEnd));
+        assertThrows(PingpongException.class, () -> taskList.updateTask(0, null, null, newStart, newEnd));
+    }
+
+    @Test
+    public void updateTask_deadlineEventTimes_throwsException() throws PingpongException {
+        LocalDate deadline = LocalDate.of(2025, 9, 10);
+        taskList.addDeadline("Deadline task", deadline);
+
+        LocalDateTime newStart = LocalDateTime.of(2025, 9, 10, 14, 0);
+        LocalDateTime newEnd = LocalDateTime.of(2025, 9, 10, 16, 0);
+
+        assertThrows(PingpongException.class, () -> taskList.updateTask(0, null, null, newStart, null));
+        assertThrows(PingpongException.class, () -> taskList.updateTask(0, null, null, null, newEnd));
+        assertThrows(PingpongException.class, () -> taskList.updateTask(0, null, null, newStart, newEnd));
+    }
+
+    @Test
+    public void updateTask_eventDeadline_throwsException() throws PingpongException {
+        LocalDateTime start = LocalDateTime.of(2025, 9, 10, 14, 0);
+        LocalDateTime end = LocalDateTime.of(2025, 9, 10, 16, 0);
+        taskList.addEvent("Event task", start, end);
+
+        LocalDate newDeadline = LocalDate.of(2025, 9, 15);
+
+        assertThrows(PingpongException.class, () -> taskList.updateTask(0, null, newDeadline, null, null));
+    }
+
+    @Test
+    public void updateTask_startAfterEnd_throwsException() throws PingpongException {
+        LocalDateTime start = LocalDateTime.of(2025, 9, 10, 14, 0);
+        LocalDateTime end = LocalDateTime.of(2025, 9, 10, 16, 0);
+        taskList.addEvent("Event task", start, end);
+
+        LocalDateTime newStart = LocalDateTime.of(2025, 9, 10, 17, 0); // After current end time
+
+        assertThrows(PingpongException.class, () -> taskList.updateTask(0, null, null, newStart, null));
+    }
+
+    @Test
+    public void updateTask_endBeforeStart_throwsException() throws PingpongException {
+        LocalDateTime start = LocalDateTime.of(2025, 9, 10, 14, 0);
+        LocalDateTime end = LocalDateTime.of(2025, 9, 10, 16, 0);
+        taskList.addEvent("Event task", start, end);
+
+        LocalDateTime newEnd = LocalDateTime.of(2025, 9, 10, 13, 0); // Before current start time
+
+        assertThrows(PingpongException.class, () -> taskList.updateTask(0, null, null, null, newEnd));
+    }
+
+    @Test
+    public void updateTask_invalidTimeRange_throwsException() throws PingpongException {
+        LocalDateTime start = LocalDateTime.of(2025, 9, 10, 14, 0);
+        LocalDateTime end = LocalDateTime.of(2025, 9, 10, 16, 0);
+        taskList.addEvent("Event task", start, end);
+
+        LocalDateTime newStart = LocalDateTime.of(2025, 9, 10, 18, 0);
+        LocalDateTime newEnd = LocalDateTime.of(2025, 9, 10, 17, 0);
+
+        assertThrows(PingpongException.class, () -> taskList.updateTask(0, null, null, newStart, newEnd));
+    }
+
+    @Test
+    public void updateTask_allTypes_success() throws PingpongException {
+        // Add different types of tasks
+        taskList.addTodo("Todo task");
+        LocalDate deadline = LocalDate.of(2025, 9, 10);
+        taskList.addDeadline("Deadline task", deadline);
+        LocalDateTime start = LocalDateTime.of(2025, 9, 10, 14, 0);
+        LocalDateTime end = LocalDateTime.of(2025, 9, 10, 16, 0);
+        taskList.addEvent("Event task", start, end);
+
+        // Update each type
+        taskList.updateTask(0, "Updated todo", null, null, null);
+        taskList.updateTask(1, "Updated deadline", null, null, null);
+        taskList.updateTask(2, "Updated event", null, null, null);
+
+        assertEquals("Updated todo", taskList.getTask(0).getDescription());
+        assertEquals("Updated deadline", taskList.getTask(1).getDescription());
+        assertEquals("Updated event", taskList.getTask(2).getDescription());
+        assertEquals(3, taskList.size());
+    }
+
+    @Test
+    public void updateTask_allEventFields_success() throws PingpongException {
+        LocalDateTime originalStart = LocalDateTime.of(2025, 9, 10, 14, 0);
+        LocalDateTime originalEnd = LocalDateTime.of(2025, 9, 10, 16, 0);
+        LocalDateTime newStart = LocalDateTime.of(2025, 9, 12, 10, 0);
+        LocalDateTime newEnd = LocalDateTime.of(2025, 9, 12, 12, 0);
+
+        taskList.addEvent("Original meeting", originalStart, originalEnd);
+
+        Task updatedTask = taskList.updateTask(0, "Updated meeting", null, newStart, newEnd);
+
+        assertEquals("Updated meeting", updatedTask.getDescription());
+        assertTrue(updatedTask instanceof Event);
+
+        Event updatedEvent = (Event) updatedTask;
+        assertEquals(newStart, updatedEvent.getStart());
+        assertEquals(newEnd, updatedEvent.getEnd());
+    }
+
+    @Test
+    public void updateTask_maintainsPosition_success() throws PingpongException {
+        taskList.addTodo("Task 1");
+        taskList.addTodo("Task 2");
+        taskList.addTodo("Task 3");
+
+        taskList.updateTask(1, "Updated Task 2", null, null, null);
+
+        assertEquals("Task 1", taskList.getTask(0).getDescription());
+        assertEquals("Updated Task 2", taskList.getTask(1).getDescription());
+        assertEquals("Task 3", taskList.getTask(2).getDescription());
+        assertEquals(3, taskList.size());
+    }
+
+    @Test
+    public void updateTask_preservesOtherTasks_success() throws PingpongException {
+        taskList.addTodo("Task 1");
+        taskList.addTodo("Task 2");
+        taskList.addTodo("Task 3");
+
+        taskList.markTask(0);
+        taskList.markTask(2);
+
+        taskList.updateTask(1, "Updated Task 2", null, null, null);
+
+        assertTrue(taskList.getTask(0).isDone());
+        assertFalse(taskList.getTask(1).isDone());
+        assertTrue(taskList.getTask(2).isDone());
+    }
 }

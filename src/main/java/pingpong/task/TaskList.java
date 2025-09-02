@@ -479,16 +479,20 @@ public class TaskList {
      */
     public Task updateTask(int index, String newDescription, LocalDate newDeadline,
                            LocalDateTime newStart, LocalDateTime newEnd) throws PingpongException {
-        assert index >= 0 : "Index should not be negative";
+        assert tasks != null : "Task list should be initialized";
 
         validateTaskIndex(index);
 
-        Task originalTask = tasks.get(index);
-        assert originalTask != null : "Original task should not be null";
+        assert index >= 0 : "Index should not be negative";
 
+        Task originalTask = tasks.get(index);
+        assert originalTask != null : "Retrieved task should not be null";
+
+        // Create new task based on the original task type with updated fields
         Task updatedTask = createUpdatedTask(originalTask, newDescription, newDeadline, newStart, newEnd);
         assert updatedTask != null : "Updated task should not be null";
 
+        // Replace the task in the list
         tasks.set(index, updatedTask);
 
         assert tasks.get(index) == updatedTask : "Task should be replaced in the list";

@@ -667,10 +667,11 @@ public class Parser {
 
     /**
      * Parses update fields and applies them to an UpdateCommand.
+     * Includes validation for empty fields and time range validation.
      *
      * @param command the UpdateCommand to configure
      * @param fieldsStr the string containing field specifications
-     * @throws PingpongException if field parsing fails
+     * @throws PingpongException if field parsing fails or validation errors occur
      */
     private static void parseUpdateFields(UpdateCommand command, String fieldsStr) throws PingpongException {
         assert command != null : "Command should not be null";
@@ -679,37 +680,57 @@ public class Parser {
         // Parse /desc field
         String description = parseUpdateField(fieldsStr, "/desc");
         if (description != null) {
+            if (description.trim().isEmpty()) {
+                throw new PingpongException("Description cannot be empty.");
+            }
             command.withDescription(description);
         }
 
         // Parse /by field
         String byStr = parseUpdateField(fieldsStr, "/by");
         if (byStr != null) {
+            if (byStr.trim().isEmpty()) {
+                throw new PingpongException("Deadline date cannot be empty.");
+            }
             LocalDate by = parseDate(byStr);
             command.withDeadline(by);
         }
 
         // Parse /from field
         String fromStr = parseUpdateField(fieldsStr, "/from");
+        LocalDateTime from = null;
         if (fromStr != null) {
-            LocalDateTime from = parseDateTime(fromStr);
+            if (fromStr.trim().isEmpty()) {
+                throw new PingpongException("Start time cannot be empty.");
+            }
+            from = parseDateTime(fromStr);
             command.withStart(from);
         }
 
         // Parse /to field
         String toStr = parseUpdateField(fieldsStr, "/to");
+        LocalDateTime to = null;
         if (toStr != null) {
-            LocalDateTime to = parseDateTime(toStr);
+            if (toStr.trim().isEmpty()) {
+                throw new PingpongException("End time cannot be empty.");
+            }
+            to = parseDateTime(toStr);
             command.withEnd(to);
+        }
+
+        // Validate time range if both start and end are being updated
+        if (from != null && to != null && from.isAfter(to)) {
+            throw new PingpongException("Event start time cannot be after end time.");
         }
     }
 
     /**
      * Parses update fields and applies them to an UpdateMultipleCommand.
+     * Includes validation for empty fields and time range validation.
      *
      * @param command the UpdateMultipleCommand to configure
      * @param fieldsStr the string containing field specifications
-     * @throws PingpongException if field parsing fails
+     * @throws PingpongException if field parsing fails or validation errors occur
      */
     private static void parseUpdateFields(UpdateMultipleCommand command, String fieldsStr) throws PingpongException {
         assert command != null : "Command should not be null";
@@ -718,28 +739,47 @@ public class Parser {
         // Parse /desc field
         String description = parseUpdateField(fieldsStr, "/desc");
         if (description != null) {
+            if (description.trim().isEmpty()) {
+                throw new PingpongException("Description cannot be empty.");
+            }
             command.withDescription(description);
         }
 
         // Parse /by field
         String byStr = parseUpdateField(fieldsStr, "/by");
         if (byStr != null) {
+            if (byStr.trim().isEmpty()) {
+                throw new PingpongException("Deadline date cannot be empty.");
+            }
             LocalDate by = parseDate(byStr);
             command.withDeadline(by);
         }
 
         // Parse /from field
         String fromStr = parseUpdateField(fieldsStr, "/from");
+        LocalDateTime from = null;
         if (fromStr != null) {
-            LocalDateTime from = parseDateTime(fromStr);
+            if (fromStr.trim().isEmpty()) {
+                throw new PingpongException("Start time cannot be empty.");
+            }
+            from = parseDateTime(fromStr);
             command.withStart(from);
         }
 
         // Parse /to field
         String toStr = parseUpdateField(fieldsStr, "/to");
+        LocalDateTime to = null;
         if (toStr != null) {
-            LocalDateTime to = parseDateTime(toStr);
+            if (toStr.trim().isEmpty()) {
+                throw new PingpongException("End time cannot be empty.");
+            }
+            to = parseDateTime(toStr);
             command.withEnd(to);
+        }
+
+        // Validate time range if both start and end are being updated
+        if (from != null && to != null && from.isAfter(to)) {
+            throw new PingpongException("Event start time cannot be after end time.");
         }
     }
 
@@ -775,6 +815,6 @@ public class Parser {
         }
 
         String value = fieldsStr.substring(startIndex, endIndex).trim();
-        return value.isEmpty() ? null : value;
+        return value;
     }
 }
