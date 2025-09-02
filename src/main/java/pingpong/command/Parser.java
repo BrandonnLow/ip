@@ -24,6 +24,7 @@ public class Parser {
     private static final String DELETE_COMMAND = "delete";
     private static final String FIND_COMMAND = "find";
     private static final String ADD_MULTIPLE_COMMAND = "addmultiple";
+    private static final String UPDATE_COMMAND = "update";
 
     // Error messages
     private static final String EMPTY_COMMAND_ERROR = "Please enter a command.";
@@ -38,6 +39,9 @@ public class Parser {
     private static final String ADD_MULTIPLE_EMPTY_ERROR = "Please specify todo descriptions separated by semicolons.";
     private static final String INVALID_TASK_NUMBER_ERROR = "Please provide valid task number(s).";
     private static final String POSITIVE_NUMBER_ERROR = "Task numbers must be positive integers.";
+    private static final String UPDATE_MISSING_ERROR = "Please specify which task(s) to update.";
+    private static final String UPDATE_NO_FIELDS_ERROR = "Please specify what to update using "
+            + "/desc, /by, /from, and/or /to.";
 
     // Date format strings
     private static final String DATE_FORMAT = "yyyy-MM-dd";
@@ -83,6 +87,8 @@ public class Parser {
             return parseFindCommand(input);
         case ADD_MULTIPLE_COMMAND:
             return parseAddMultipleCommand(input);
+        case UPDATE_COMMAND:
+            return parseUpdateCommand(input);
         default:
             throw new PingpongException(UNKNOWN_COMMAND_ERROR);
         }
@@ -124,8 +130,8 @@ public class Parser {
         assert input != null : "Input should not be null";
         assert command != null : "Command should not be null";
 
-        return input.length() > command.length() &&
-                input.substring(command.length()).trim().length() > 0;
+        return input.length() > command.length()
+                && input.substring(command.length()).trim().length() > 0;
     }
 
     /**
@@ -583,5 +589,192 @@ public class Parser {
             throw new PingpongException("Invalid datetime format."
                     + "Please use formats like: 2019-12-02 1800, 2019-12-02 18:00, or 2019-12-02");
         }
+    }
+
+
+    /**
+     * Parses an update command to extract task numbers and update fields.
+     * Expected formats:
+     * - "update 1 /desc new description"
+     * - "update 1 /by 2025-09-05"
+     * - "update 1 /from 2025-09-05 1400 /to 2025-09-05 1600"
+     * - "update 1 2 3 /desc new description" (multiple tasks)
+     * - "update 1 /desc new description /by 2025-09-05" (multiple fields)
+     *
+     * @param input the update command string
+     * @return an UpdateCommand or UpdateMultipleCommand
+     * @throws PingpongException if the format is invalid
+     */
+    private static Command parseUpdateCommand(String input) throws PingpongException {
+        assert input != null : "Input should not be null";
+        assert input.startsWith("update") : "Input should start with 'update'";
+
+        if (!hasArguments(input, UPDATE_COMMAND)) {
+            throw new PingpongException(UPDATE_MISSING_ERROR);
+        }
+
+        String remaining = input.substring(UPDATE_COMMAND.length()).trim();
+        assert !remaining.isEmpty() : "Remaining string should not be empty after validation";
+
+        // Find the first field indicator to separate task numbers from update fields
+        int firstFieldIndex = findFirstFieldIndicator(remaining);
+        if (firstFieldIndex == -1) {
+            throw new PingpongException(UPDATE_NO_FIELDS_ERROR);
+        }
+
+        String taskNumbersStr = remaining.substring(0, firstFieldIndex).trim();
+        String fieldsStr = remaining.substring(firstFieldIndex).trim();
+
+        // Parse task numbers
+        String[] taskNumberParts = taskNumbersStr.split("\\s+");
+        assert taskNumberParts != null : "Task number parts should not be null";
+        assert taskNumberParts.length > 0 : "Should have at least one task number";
+
+        if (taskNumberParts.length == 1) {
+            int taskNumber = parseTaskNumber(taskNumberParts[0]);
+            UpdateCommand command = new UpdateCommand(taskNumber);
+            parseUpdateFields(command, fieldsStr);
+            return command;
+        } else {
+            int[] taskNumbers = parseTaskNumbers(taskNumberParts);
+            UpdateMultipleCommand command = new UpdateMultipleCommand(taskNumbers);
+            parseUpdateFields(command, fieldsStr);
+            return command;
+        }
+    }
+
+    /**
+     * Finds the index of the first field indicator (/desc, /by, /from, /to) in the string.
+     *
+     * @param str the string to search
+     * @return the index of the first field indicator, or -1 if none found
+     */
+    private static int findFirstFieldIndicator(String str) {
+        assert str != null : "String should not be null";
+
+        String[] indicators = {"/desc", "/by", "/from", "/to"};
+        int earliest = Integer.MAX_VALUE;
+
+        for (String indicator : indicators) {
+            int index = str.indexOf(indicator);
+            if (index != -1 && index < earliest) {
+                earliest = index;
+            }
+        }
+
+        return earliest == Integer.MAX_VALUE ? -1 : earliest;
+    }
+
+    /**
+     * Parses update fields and applies them to an UpdateCommand.
+     *
+     * @param command the UpdateCommand to configure
+     * @param fieldsStr the string containing field specifications
+     * @throws PingpongException if field parsing fails
+     */
+    private static void parseUpdateFields(UpdateCommand command, String fieldsStr) throws PingpongException {
+        assert command != null : "Command should not be null";
+        assert fieldsStr != null : "Fields string should not be null";
+
+        // Parse /desc field
+        String description = parseUpdateField(fieldsStr, "/desc");
+        if (description != null) {
+            command.withDescription(description);
+        }
+
+        // Parse /by field
+        String byStr = parseUpdateField(fieldsStr, "/by");
+        if (byStr != null) {
+            LocalDate by = parseDate(byStr);
+            command.withDeadline(by);
+        }
+
+        // Parse /from field
+        String fromStr = parseUpdateField(fieldsStr, "/from");
+        if (fromStr != null) {
+            LocalDateTime from = parseDateTime(fromStr);
+            command.withStart(from);
+        }
+
+        // Parse /to field
+        String toStr = parseUpdateField(fieldsStr, "/to");
+        if (toStr != null) {
+            LocalDateTime to = parseDateTime(toStr);
+            command.withEnd(to);
+        }
+    }
+
+    /**
+     * Parses update fields and applies them to an UpdateMultipleCommand.
+     *
+     * @param command the UpdateMultipleCommand to configure
+     * @param fieldsStr the string containing field specifications
+     * @throws PingpongException if field parsing fails
+     */
+    private static void parseUpdateFields(UpdateMultipleCommand command, String fieldsStr) throws PingpongException {
+        assert command != null : "Command should not be null";
+        assert fieldsStr != null : "Fields string should not be null";
+
+        // Parse /desc field
+        String description = parseUpdateField(fieldsStr, "/desc");
+        if (description != null) {
+            command.withDescription(description);
+        }
+
+        // Parse /by field
+        String byStr = parseUpdateField(fieldsStr, "/by");
+        if (byStr != null) {
+            LocalDate by = parseDate(byStr);
+            command.withDeadline(by);
+        }
+
+        // Parse /from field
+        String fromStr = parseUpdateField(fieldsStr, "/from");
+        if (fromStr != null) {
+            LocalDateTime from = parseDateTime(fromStr);
+            command.withStart(from);
+        }
+
+        // Parse /to field
+        String toStr = parseUpdateField(fieldsStr, "/to");
+        if (toStr != null) {
+            LocalDateTime to = parseDateTime(toStr);
+            command.withEnd(to);
+        }
+    }
+
+    /**
+     * Parses a specific field from the fields string.
+     *
+     * @param fieldsStr the complete fields string
+     * @param fieldIndicator the field indicator to look for (e.g., "/desc")
+     * @return the field value, or null if field not found
+     */
+    private static String parseUpdateField(String fieldsStr, String fieldIndicator) {
+        assert fieldsStr != null : "Fields string should not be null";
+        assert fieldIndicator != null : "Field indicator should not be null";
+
+        int startIndex = fieldsStr.indexOf(fieldIndicator);
+        if (startIndex == -1) {
+            return null;
+        }
+
+        startIndex += fieldIndicator.length();
+
+        // Find the end of this field (next field indicator or end of string)
+        String[] nextIndicators = {"/desc", "/by", "/from", "/to"};
+        int endIndex = fieldsStr.length();
+
+        for (String nextIndicator : nextIndicators) {
+            if (!nextIndicator.equals(fieldIndicator)) {
+                int nextIndex = fieldsStr.indexOf(nextIndicator, startIndex);
+                if (nextIndex != -1 && nextIndex < endIndex) {
+                    endIndex = nextIndex;
+                }
+            }
+        }
+
+        String value = fieldsStr.substring(startIndex, endIndex).trim();
+        return value.isEmpty() ? null : value;
     }
 }

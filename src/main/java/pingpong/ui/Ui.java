@@ -291,6 +291,36 @@ public class Ui {
     }
 
     /**
+     * Displays a confirmation message when a task has been updated.
+     *
+     * @param originalTask the original task before updating
+     * @param updatedTask the task after updating
+     */
+    public void showTaskUpdated(Task originalTask, Task updatedTask) {
+        System.out.println(" Got it. I've updated this task:");
+        System.out.println("   From: " + originalTask);
+        System.out.println("   To:   " + updatedTask);
+    }
+
+    /**
+     * Displays confirmation messages when multiple tasks have been updated using varargs.
+     *
+     * @param originalTasks the original tasks before updating
+     * @param updatedTasks the tasks after updating
+     */
+    public void showTasksUpdated(Task[] originalTasks, Task[] updatedTasks) {
+        if (originalTasks.length == 1) {
+            showTaskUpdated(originalTasks[0], updatedTasks[0]);
+        } else {
+            System.out.println(" Got it. I've updated these " + originalTasks.length + " tasks:");
+            for (int i = 0; i < originalTasks.length; i++) {
+                System.out.println("   " + (i + 1) + ". From: " + originalTasks[i]);
+                System.out.println("      To:   " + updatedTasks[i]);
+            }
+        }
+    }
+
+    /**
      * Closes the scanner and releases resources.
      */
     public void close() {
