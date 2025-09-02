@@ -10,6 +10,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.regex.Pattern;
 
 import pingpong.task.Deadline;
 import pingpong.task.Event;
@@ -199,7 +200,7 @@ public class Storage {
         assert !line.trim().isEmpty() : "Line should not be empty";
 
         try {
-            String[] parts = line.split("\\" + FIELD_SEPARATOR);
+            String[] parts = line.split(Pattern.quote(FIELD_SEPARATOR));
 
             if (!isValidTaskFormat(parts)) {
                 return null;
