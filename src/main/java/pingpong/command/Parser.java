@@ -12,7 +12,7 @@ import pingpong.command.parser.UpdateFieldParser;
 /**
  * Handles parsing of user commands and returns appropriate Command objects.
  * This class contains the main parsing logic for all supported commands in the Pingpong application.
- * Now supports varargs for batch operations on multiple tasks.
+ * Supports varargs for batch operations on multiple tasks and help command.
  */
 public class Parser {
     // Command keywords
@@ -26,21 +26,42 @@ public class Parser {
     private static final String FIND_COMMAND = "find";
     private static final String ADD_MULTIPLE_COMMAND = "addmultiple";
     private static final String UPDATE_COMMAND = "update";
+    private static final String HELP_COMMAND = "help";
 
     // Error messages
-    private static final String EMPTY_COMMAND_ERROR = "Please enter a command.";
-    private static final String UNKNOWN_COMMAND_ERROR = "I'm sorry, but I don't know what that means :-(";
-    private static final String MARK_MISSING_ERROR = "Please specify which task(s) to mark.";
-    private static final String UNMARK_MISSING_ERROR = "Please specify which task(s) to unmark.";
-    private static final String DELETE_MISSING_ERROR = "Please specify which task(s) to delete.";
-    private static final String TODO_EMPTY_ERROR = "The description of a todo cannot be empty.";
-    private static final String DEADLINE_EMPTY_ERROR = "The description of a deadline cannot be empty.";
-    private static final String EVENT_EMPTY_ERROR = "The description of an event cannot be empty.";
-    private static final String FIND_EMPTY_ERROR = "Please specify a keyword or date (yyyy-MM-dd) to search for.";
-    private static final String ADD_MULTIPLE_EMPTY_ERROR = "Please specify todo descriptions separated by semicolons.";
-    private static final String UPDATE_MISSING_ERROR = "Please specify which task(s) to update.";
+    private static final String EMPTY_COMMAND_ERROR = "Please enter a command.\nType 'help' to see available commands.";
+    private static final String UNKNOWN_COMMAND_ERROR = "I don't understand '%s'.\n\n"
+            + "Available commands: todo, deadline, event, list, mark, unmark, delete, find, update, addmultiple, help, bye\n"
+            + "Type 'help' for detailed usage information.";
+    private static final String MARK_MISSING_ERROR = "Please specify which task(s) to mark.\n"
+            + "Format: mark INDEX [INDEX2 INDEX3...]\n"
+            + "Example: mark 1 OR mark 1 3 5";
+    private static final String UNMARK_MISSING_ERROR = "Please specify which task(s) to unmark.\n"
+            + "Format: unmark INDEX [INDEX2 INDEX3...]\n"
+            + "Example: unmark 2 OR unmark 1 2 3";
+    private static final String DELETE_MISSING_ERROR = "Please specify which task(s) to delete.\n"
+            + "Format: delete INDEX [INDEX2 INDEX3...]\n"
+            + "Example: delete 3 OR delete 1 2 4";
+    private static final String TODO_EMPTY_ERROR = "The description of a todo cannot be empty.\n"
+            + "Format: todo DESCRIPTION\n"
+            + "Example: todo Buy groceries";
+    private static final String DEADLINE_EMPTY_ERROR = "The description of a deadline cannot be empty.\n"
+            + "Format: deadline DESCRIPTION /by DATE\n"
+            + "Example: deadline Submit report /by 2025-09-15";
+    private static final String EVENT_EMPTY_ERROR = "The description of an event cannot be empty.\n"
+            + "Format: event DESCRIPTION /from DATETIME /to DATETIME\n"
+            + "Example: event Meeting /from 2025-09-10 1400 /to 2025-09-10 1600";
+    private static final String FIND_EMPTY_ERROR = "Please specify a keyword or date (yyyy-MM-dd) to search for.\n"
+            + "Examples: find meeting OR find 2025-09-10";
+    private static final String ADD_MULTIPLE_EMPTY_ERROR = "Please specify todo descriptions separated by semicolons.\n"
+            + "Format: addmultiple DESC1; DESC2; DESC3\n"
+            + "Example: addmultiple Buy milk; Call mom; Read book";
+    private static final String UPDATE_MISSING_ERROR = "Please specify which task(s) to update.\n"
+            + "Format: update INDEX [/desc DESC] [/by DATE] [/from DATETIME] [/to DATETIME]\n"
+            + "Example: update 1 /desc New description";
     private static final String UPDATE_NO_FIELDS_ERROR = "Please specify what to update using "
-            + "/desc, /by, /from, and/or /to.";
+            + "/desc, /by, /from, and/or /to.\n"
+            + "Example: update 1 /desc New task description";
 
     /**
      * Parses user input and returns the appropriate Command object for execution.
@@ -60,6 +81,8 @@ public class Parser {
         switch (command) {
         case LIST_COMMAND:
             return new ListCommand();
+        case HELP_COMMAND:
+            return new HelpCommand();
         case MARK_COMMAND:
             return parseMarkCommand(input);
         case UNMARK_COMMAND:
@@ -79,7 +102,7 @@ public class Parser {
         case UPDATE_COMMAND:
             return parseUpdateCommand(input);
         default:
-            throw new PingpongException(UNKNOWN_COMMAND_ERROR);
+            throw new PingpongException(String.format(UNKNOWN_COMMAND_ERROR, command));
         }
     }
 
@@ -188,7 +211,8 @@ public class Parser {
 
         String[] parts = input.substring(DEADLINE_COMMAND.length()).split(" /by ");
         if (parts.length != 2) {
-            throw new PingpongException("Please use format: deadline <description> /by <yyyy-MM-dd>");
+            throw new PingpongException("Please use format: deadline <description> /by <yyyy-MM-dd>\n"
+                    + "Example: deadline Submit report /by 2025-09-15");
         }
 
         String description = parts[0].trim();
@@ -205,7 +229,8 @@ public class Parser {
             throw new PingpongException(DEADLINE_EMPTY_ERROR);
         }
         if (byStr.isEmpty()) {
-            throw new PingpongException("The deadline date cannot be empty.");
+            throw new PingpongException("The deadline date cannot be empty.\n"
+                    + "Date format: yyyy-MM-dd (e.g., 2025-09-15)");
         }
     }
 
@@ -238,7 +263,8 @@ public class Parser {
 
         if (fromParts.length != 2) {
             throw new PingpongException("Please use format: event <description> "
-                    + "/from <yyyy-MM-dd HHmm> /to <yyyy-MM-dd HHmm>");
+                    + "/from <yyyy-MM-dd HHmm> /to <yyyy-MM-dd HHmm>\n"
+                    + "Example: event Meeting /from 2025-09-10 1400 /to 2025-09-10 1600");
         }
 
         String description = fromParts[0].trim();
@@ -246,7 +272,8 @@ public class Parser {
 
         if (toParts.length != 2) {
             throw new PingpongException("Please use format: event <description> "
-                    + "/from <yyyy-MM-dd HHmm> /to <yyyy-MM-dd HHmm>");
+                    + "/from <yyyy-MM-dd HHmm> /to <yyyy-MM-dd HHmm>\n"
+                    + "Example: event Meeting /from 2025-09-10 1400 /to 2025-09-10 1600");
         }
 
         return new String[]{description, toParts[0].trim(), toParts[1].trim()};
@@ -258,10 +285,12 @@ public class Parser {
             throw new PingpongException(EVENT_EMPTY_ERROR);
         }
         if (fromStr.isEmpty()) {
-            throw new PingpongException("The event start time cannot be empty.");
+            throw new PingpongException("The event start time cannot be empty.\n"
+                    + "DateTime format: yyyy-MM-dd HHmm (e.g., 2025-09-10 1400)");
         }
         if (toStr.isEmpty()) {
-            throw new PingpongException("The event end time cannot be empty.");
+            throw new PingpongException("The event end time cannot be empty.\n"
+                    + "DateTime format: yyyy-MM-dd HHmm (e.g., 2025-09-10 1600)");
         }
     }
 
@@ -297,7 +326,8 @@ public class Parser {
         ArrayList<String> validDescriptions = extractValidDescriptions(descriptions);
 
         if (validDescriptions.isEmpty()) {
-            throw new PingpongException("Please provide at least one valid todo description.");
+            throw new PingpongException("Please provide at least one valid todo description.\n"
+                    + "Separate multiple descriptions with semicolons (;)");
         }
 
         return new AddMultipleCommand(validDescriptions.toArray(new String[0]));

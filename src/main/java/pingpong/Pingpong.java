@@ -2,6 +2,7 @@ package pingpong;
 
 import pingpong.command.Command;
 import pingpong.command.Parser;
+import pingpong.storage.SampleDataLoader;
 import pingpong.storage.Storage;
 import pingpong.task.TaskList;
 import pingpong.ui.Ui;
@@ -23,8 +24,25 @@ public class Pingpong {
     public Pingpong(String filePath) {
         ui = new Ui();
         storage = new Storage(filePath);
+
+        // Check if this is the first run
+        boolean isFirstRun = SampleDataLoader.isFirstRun(filePath);
+
         try {
-            tasks = new TaskList(storage.load());
+            if (isFirstRun) {
+                // First run - load sample data
+                tasks = new TaskList();
+                SampleDataLoader.loadSampleData(tasks);
+                storage.save(tasks.getAllTasks());
+                ui.showMessages(
+                        "Welcome to Pingpong! Sample tasks have been loaded to help you get started.",
+                        "Type 'help' to see all available commands.",
+                        ""
+                );
+            } else {
+                // Normal run - load existing data
+                tasks = new TaskList(storage.load());
+            }
         } catch (Exception e) {
             ui.showError("Error loading tasks from file. Starting with empty task list.");
             tasks = new TaskList();

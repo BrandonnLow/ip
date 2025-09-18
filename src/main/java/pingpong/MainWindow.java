@@ -41,7 +41,7 @@ public class MainWindow extends AnchorPane {
      * Shows the welcome message when the application starts.
      */
     private void showWelcomeMessage() {
-        String welcomeMessage = " Hello! I'm Pingpong\n What can I do for you?";
+        String welcomeMessage = " Hello! I'm Pingpong\n What can I do for you?\n Type 'help' to see available commands";
         dialogContainer.getChildren().addAll(
                 DialogBox.getPingpongDialog(welcomeMessage, pingpongImage)
         );
